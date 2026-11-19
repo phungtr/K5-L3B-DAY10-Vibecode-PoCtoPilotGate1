@@ -20,7 +20,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> …
+>Trợ lý tự động giải quyết ổn định các yêu cầu hoàn tiền giao trễ trong đúng thẩm quyền dựa trên dữ liệu hệ thống và chính sác hiệu lực, ghi sổ cái và phản hồi khách nhất quán, không làm rò rỉ dữ liệu mật và không đẩy ngược phần lớn ca hợp lệ sang cho người duyệt.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
