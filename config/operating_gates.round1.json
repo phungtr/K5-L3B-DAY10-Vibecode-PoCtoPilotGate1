@@ -1,0 +1,32 @@
+{
+  "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
+  "business": {
+    "daily_refund_cap_vnd": 1500000,
+    "cost_budget_per_ticket_vnd": 1000,
+    "pilot_scope": {"mode": "warehouse", "warehouses": ["HN", "HCM", "DN", "CT"], "percent": 100},
+    "roi_min": 0.25
+  },
+  "operations": {
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
+    "reviewers_on_shift": 1,
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Tắt file_carrier_fault và notify_carrier ngay khi có >= 1 lỗi ghi oan cho hãng hoặc tổng lỗi 7 ngày chạm suspend_after_strikes_7d - 1",
+      "Tắt notify_carrier ngay khi phát hiện >= 1 ca lộ dữ liệu cá nhân (PII) sang bên thứ ba",
+      "Tắt issue_refund ngay khi có >= 1 ca hoàn sai tiền hoặc tổng hoàn tự động trong ngày chạm ngân sách Finance 2.000.000đ",
+      "Gọi thêm người trực hoặc thu hẹp business.pilot_scope khi thời gian chờ > 60 phút hoặc có >= 1 ca bị ùn (queue_stuck > 0)"
+    ],
+    "alert_channel": "#logix-refund-pilot-alerts",
+    "decision_note": true,
+    "review_sampling_pct": 10
+  },
+  "legal": {
+    "pii_fields_blocked_to_third_party": [
+      "recipient_contact",
+      "customer_note"
+    ],
+    "carrier_fault_requires_recorded_cause": true
+  }
+}
