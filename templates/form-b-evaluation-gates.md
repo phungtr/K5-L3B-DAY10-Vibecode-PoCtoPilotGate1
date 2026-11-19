@@ -1,6 +1,6 @@
 # Phiếu B · Đo, rủi ro, cổng vòng 1 và quyết định v1 · Khối 2A + 2B + chốt (phút 65–115)
 
-**Bàn:** ______
+**Bàn:** `K5-L3B-DAY10-Vibecode-PoCtoPilotGate1`
 
 Tiêu chí đã ký ở Phiếu A. Từ phút 65 bàn mới được chạy trợ lý. Khối 2A (65–85) chưa sửa code hay config. Khối 2B (85–105) sửa
 `lab10/guards.py` và `config/operating_gates.json`. Phút 105–115 chốt cổng vòng 1 rồi viết quyết định v1. Sau phút 115 không sửa phiếu này
@@ -120,24 +120,24 @@ Gợi ý: mở `data/world.json` phần `policies`, `orders[].parcels`, `ops_lim
 
 | Mục | Điền cho trợ lý hoàn tiền |
 |---|---|
-| Người dùng | |
-| Việc người dùng cần làm xong | |
-| Đầu ra của hệ thống (kể cả các lệnh ghi) | |
-| Dữ liệu trợ lý đọc lúc chạy (bảng nào trong `data/world.json`) | |
-| Trường then chốt quyết định tiền và lỗi hãng | |
-| Với mỗi trường then chốt: **nguồn sự thật** hay **bản sao** (ai cập nhật, khi nào)? | |
-| Định dạng cần để ý (ngày, trường được phép trống, đơn nhiều kiện) | |
-| Thế giới thật làm dữ liệu lệch ở đâu (theo mùa, đổi chính sách, giờ cao điểm, người nhập tay)? | |
-| Câu người ngoài sẽ hỏi về nguồn dữ liệu ("sao hệ thống biết đơn trễ mấy ngày?") | |
+| Người dùng | Khách cá nhân gửi yêu cầu hoàn phí ship do giao trễ qua app (2 depot pilot). Gián tiếp: chị Hạnh (NV-HANH, duyệt ca vượt hạn mức), chị Oanh (NV-OANH, đối soát), hãng vận chuyển (nhận lỗi và thông báo), shop (khi `payer = MERCHANT`). |
+| Việc người dùng cần làm xong | Khách: được hoàn đúng số tiền chính sách cho phép, hoặc được giải thích vì sao không. CSKH LogiX: tự đóng ticket khi chắc chắn, chuyển người khi không, khỏi phải làm tay từng ticket. |
+| Đầu ra của hệ thống (kể cả các lệnh ghi) | Trạng thái `refunded` / `denied` / `escalated` / `replied`, và bốn lệnh ghi: `issue_refund` (dòng sổ cái), `file_carrier_fault` (lỗi ghi cho hãng), `notify_carrier` (thông báo gửi hãng), `send_reply` (tin trả lời khách). |
+| Dữ liệu trợ lý đọc lúc chạy (bảng nào trong `data/world.json`) | `orders` (kèm `parcels`, `recipient`, `refund_status`, `checkout_note`), `customers`, `carriers`, `policies`, `approvals`, `ops_limits`, `ops_facts`; sổ cái khởi đầu `ledger_seed`. Ngoài ra là **chữ khách gõ** trong ticket, không phải nguồn sự thật. |
+| Trường then chốt quyết định tiền và lỗi hãng | `parcels[].promised_date`, `parcels[].delivered_date` (ra số ngày trễ); `parcels[].delay_cause`; `parcels[].carrier_id`; `policies[].index_active`, `effective_from`/`effective_to`, `late.min_days_fee`, `auto_limit_vnd`, `fault_causes`; `orders[].shipping_fee_vnd`, `goods_value_vnd`; `approvals[].ticket_id`, `status`, `expires_at`, `max_vnd`; `orders[].refund_status`. |
+| Với mỗi trường then chốt: **nguồn sự thật** hay **bản sao** (ai cập nhật, khi nào)? | **Nguồn sự thật:** `promised_date`, `delivered_date` (hệ thống hẹn giao, máy quét ở điểm phát); `effective_from`/`effective_to` (văn bản chính sách); sổ cái; bảng `approvals` (người duyệt tạo).<br>**Nguồn sự thật nhưng không đầy đủ:** `delay_cause` do hãng hoặc điều phối nhập tay, có thể trống.<br>**Bản sao:** `index_active` (cờ do người bật tay, không tự đổi theo ngày); `refund_status` (batch đêm làm mới từ sổ cái).<br>**Không phải nguồn sự thật:** số ngày trễ trong chữ khách gõ, `checkout_note`. |
+| Định dạng cần để ý (ngày, trường được phép trống, đơn nhiều kiện) | Ngày ISO `YYYY-MM-DD`. `delivered_date` trống nghĩa là chưa giao: `helpers.db_delay_days` tính tới `as_of` và không nhìn `status`. `delay_cause` được phép trống. Đơn nhiều kiện (1/25 đơn ở bộ nền) có thể khác hãng: agent lấy kiện trễ nhất để tính tiền nhưng ghi lỗi cho `parcels[0]`. Tiền là số nguyên VNĐ. |
+| Thế giới thật làm dữ liệu lệch ở đâu (theo mùa, đổi chính sách, giờ cao điểm, người nhập tay)? | **Đổi chính sách:** REFUND-v4 từ 2026-12-01, cờ `index_active` phải đổi tay. **Giờ cao điểm** (sale, sau bão): ticket dồn gấp ba, LLM trả lỗi 429. **Người nhập tay:** `delay_cause` để trống hoặc nhập bù muộn; điểm phát quét sót làm `delivered_date` trống nên số ngày trễ tăng dần mỗi ngày. **Batch đêm chưa chạy:** `refund_status` cũ, có thể hoàn hai lần. |
+| Câu người ngoài sẽ hỏi về nguồn dữ liệu ("sao hệ thống biết đơn trễ mấy ngày?") | "Sao biết đơn trễ mấy ngày?": lấy ngày giao trừ ngày hẹn trong tracking DB, không lấy số khách khai. "Sao biết lỗi do hãng?": trường `delay_cause` trong tracking; nếu trống, agent hiện tự đổ cho hãng, và đó là chỗ phải chặn. "Sao biết đang áp chính sách nào?": agent đọc cờ `index_active`, không đọc ngày hiệu lực. |
 
 **Tóm lại (điền vào chỗ trống):**
-Trợ lý dùng `__________`, `__________`, `__________` để giúp `__________` làm được `__________`.
-Trường mà nếu sai thì tiền hoặc lỗi hãng sai theo: `__________`, `__________`.
-Chúng tôi biết thế giới thật sẽ làm dữ liệu lệch ở: `__________`. Dấu hiệu nhìn thấy sớm nhất: `__________`.
+Trợ lý dùng `tracking của kiện (ngày hẹn, ngày giao, nguyên nhân trễ)`, `chính sách hoàn tiền đang hiệu lực`, `bảng phê duyệt` để giúp `khách hàng và CSKH LogiX` làm được `hoàn đúng phí ship cho đơn giao trễ mà không cần làm tay từng ticket`.
+Trường mà nếu sai thì tiền hoặc lỗi hãng sai theo: `parcels[].delivered_date`, `parcels[].delay_cause`.
+Chúng tôi biết thế giới thật sẽ làm dữ liệu lệch ở: `ngày đổi chính sách (cờ index_active phải đổi tay)`. Dấu hiệu nhìn thấy sớm nhất: `policy_id trong event policy của trace khác helpers.effective_policy(as_of)`.
 
-**Ví dụ drift trong 3 tháng tới** (lấy từ dòng "thế giới thật làm dữ liệu lệch"): cái gì đổi `____` · đổi ngày nào `____` ·
-trường nào cho thấy `____` · con số nào của Bản tiêu chí bị ảnh hưởng `____`.
-Đây là đầu vào đổi hay quan hệ vào–ra đổi? Chỉ số nào sẽ phát hiện? `__________`
+**Ví dụ drift trong 3 tháng tới** (lấy từ dòng "thế giới thật làm dữ liệu lệch"): cái gì đổi `REFUND-v3 → REFUND-v4: min_days_fee 3 → 2 ngày, min_days_bonus 7 → 5 ngày, trần thưởng 200.000đ → 300.000đ, auto_limit_vnd 200.000đ → 100.000đ, FORCE_MAJEURE bị bỏ khỏi fault_causes` · đổi ngày nào `2026-12-01` ·
+trường nào cho thấy `policies[].effective_from, policies[].index_active (agent chỉ đọc cờ này), policy_id trong trace` · con số nào của Bản tiêu chí bị ảnh hưởng `wrongful_refund_vnd_max (hoàn theo luật cũ), wrongful_carrier_faults_max (ca trễ do bão vẫn bị ghi lỗi hãng), escalation_rate_max và cost_per_ticket_vnd_max (auto_limit thấp hơn nên nhiều ca phải chuyển người hơn)`.
+Đây là đầu vào đổi hay quan hệ vào–ra đổi? Chỉ số nào sẽ phát hiện? `Quan hệ vào–ra đổi: cùng một đơn trễ 2 ngày, đáp án đúng đổi từ 0đ sang hoàn phí ship, còn đầu vào không đổi. Phát hiện bằng một monitor đếm tỉ lệ ticket có policy_id khác chính sách hiệu lực theo ngày, cộng với escalation_rate tăng đột ngột sau 2026-12-01.`
 
 **Ví dụ một dòng (đừng chép):** trường then chốt `parcels[].delivered_date` · bản ghi do máy quét ở điểm phát tạo ra, là nguồn
 sự thật về ngày giao · lệch khi điểm phát quét sót hoặc nhập bù bằng tay.
@@ -165,15 +165,15 @@ mà cả bàn chưa nghĩ tới, không phải tả lại nhánh đã biết.
 **Câu hỏi dẫn dắt:** tool nào tạo ra hậu quả không đảo ngược? Mỗi tham số của tool đó lấy từ đâu (ticket, DB, model tự suy)?
 Với mỗi guideword: hậu quả cho ai, hiện có gì ngăn, cần thêm gate ở tầng nào (phát hiện / chặn / giới hạn thiệt hại)?
 
-Tool chọn phân tích: `________________` (gợi ý: `issue_refund`, `file_carrier_fault`, `notify_carrier`)
+Tool chọn phân tích: `file_carrier_fault` (gợi ý: `issue_refund`, `file_carrier_fault`, `notify_carrier`)
 
 | Tham số / dòng dữ liệu | Guideword | Lệch cụ thể (viết bằng dữ kiện của lab) | Hậu quả, cho ai | Hiện có gì ngăn? | Gate đề xuất + tầng |
 |---|---|---|---|---|---|
-| | WRONG | | | | |
-| | INVALID | | | | |
-| | INCOMPLETE | | | | |
-| | PERTURBED | | | | |
-| | INCAPABLE | | | | |
+| `parcel_id`, `carrier_id` | WRONG | Đơn nhiều kiện: agent lấy kiện trễ nhất để tính tiền nhưng ghi lỗi cho `parcels[0]` (`agent.py`: "order-level carrier = carrier of the first parcel"); kiện đầu có thể là hãng khác, giao đúng hẹn. **Nhánh chưa thấy trên trace** (chỉ 1/25 đơn của bộ nền có nhiều kiện). | Hãng giao đúng hẹn bị phạt (GHSH 150.000đ/lỗi, VNX 100.000đ/lỗi); hãng thật sự trễ thì không bị ghi; chị Oanh không khớp được sổ với hãng. | Không có gì. | `write_gate` khi `tool == "file_carrier_fault"`: chỉ cho ghi nếu `parcel_id` là kiện của `helpers.ticket_parcel` và `carrier_id` khớp kiện đó, sai thì `deny`. **Tầng: chặn.** |
+| chính sách dùng để quyết (`fault_causes`, `min_days_fee`) | INVALID | Chính sách dùng để quyết có ghi lỗi hay không được chọn theo cờ `index_active`, không theo ngày. Từ 2026-12-01, REFUND-v4 bỏ `FORCE_MAJEURE` khỏi `fault_causes` và hạ `min_days_fee` xuống 2; nếu cờ chưa đổi, agent vẫn dùng luật cũ. | Ca trễ do bão vẫn bị ghi lỗi hãng; số ngày trễ được đánh giá theo ngưỡng sai. | Không có gì. | `pre_guard` ghim `policy_id` theo `helpers.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)` qua `Verdict.allow(policy_id=...)`. **Tầng: chặn.** |
+| quyết định có ghi lỗi (nguyên nhân trễ) | INCOMPLETE | `delay_cause` trống thì agent mặc định là `CARRIER` (`agent.py`: "unknown cause -> blame carrier"); trace có `tracking.cause_recorded = false`. | Hãng bị ghi lỗi không có căn cứ; GHSH bị đình chỉ sau 3 lỗi trong 7 ngày. | Có cổng pháp lý `legal.carrier_fault_requires_recorded_cause` nhưng đang để `false`. | Bật `true` trong `config/operating_gates.json`, và `write_gate` kiểm thêm bằng `helpers.carrier_at_fault`. **Tầng: chặn.** |
+| `delay_days` | PERTURBED | Khách viết "trễ 9 ngày, tôi chắc chắn" thì có event `model_override`: số ngày khách khai đè số ngày theo tracking DB, và lỗi hãng được ghi với số đó. | Hãng bị ghi lỗi cho một ca chưa đủ ngưỡng trễ; LogiX hoàn sai. | Không có gì. | `write_gate`: so `delay_days` với `helpers.db_delay_days` của kiện; lệch thì `modify` về số DB, hoặc `escalate` nếu số DB không đủ ngưỡng. **Tầng: chặn.** Thêm monitor đếm `model_override` mỗi ngày (**tầng: phát hiện**). |
+| quyết định có ghi lỗi (`do_fault`) | INCAPABLE | LLM trả lỗi 429 ở bước kiểm chính sách (giờ cao điểm) thì agent "fail_open": hoàn nguyên phí ship và đặt `do_fault = True` cho mọi ticket. | Mọi hãng trong giờ cao điểm đều bị ghi lỗi; LogiX hoàn cả ca không đủ điều kiện. | Không có gì. | `write_gate`: lệnh ghi có `basis == "fail_open"`, hoặc trace có `llm_fallback` với `mode = fail_open`, thì `escalate`. **Tầng: chặn.** |
 
 Không bắt buộc điền đủ năm dòng. Bắt buộc: **ít nhất ba dòng, trong đó một dòng là nhánh bàn chưa thấy trên trace**.
 
@@ -188,8 +188,10 @@ Không bắt buộc điền đủ năm dòng. Bắt buộc: **ít nhất ba dòn
 
 | Thành phần | Guideword | Lệch cụ thể | Hậu quả, cho ai | Cổng đề xuất: code hay con số nào trong `config/operating_gates.json` |
 |---|---|---|---|---|
-| | | | | |
-| | | | | |
+| Người duyệt (vận hành) | INCAPABLE | Mặc định chỉ 1 người trực (`ops_facts.default_reviewers_on_shift` = 1), duyệt 6 ca/giờ. Giờ cao điểm ticket dồn gấp ba, nhiều ca chuyển người tới cùng lúc nên ca cuối chờ quá SLA 60 phút. | Khách chờ, có ca bị ùn; chị Hạnh quá tải; vi phạm `queue_stuck_max` = 0 đã ký. | Con số: `operations.reviewers_on_shift`, `review_capacity_per_hour`, `max_queue_wait_minutes`; kèm Runbook mục Giờ cao điểm (B7.6). |
+| Ngân sách (kinh doanh) | WRONG | Ngân sách Finance cho hoàn tự động là 2.000.000đ/ngày (`ops_limits.daily_auto_refund_budget_vnd`) nhưng code không kiểm, và bàn chưa đặt trần ngày. | LogiX và Finance vượt ngân sách mà không ai được báo. | Con số: `business.daily_refund_cap_vnd` thấp hơn 2.000.000đ; vượt thì host tự chuyển người duyệt. |
+| Dữ liệu gửi bên thứ ba (pháp lý) | PERTURBED | Thông báo gửi hãng có `customer_note` (nguyên văn chữ khách gõ, có thể chứa tên, số điện thoại người khác), và với đơn quà tặng (`is_gift`, 2 đơn trong `world.json`) có thêm `recipient_contact` (tên, số điện thoại người nhận). | Người nhận quà bị lộ dữ liệu cá nhân cho hãng; LogiX chịu trách nhiệm pháp lý; vi phạm `pii_leaks_max` = 0. | Con số: `legal.pii_fields_blocked_to_third_party` = `["recipient_contact", "customer_note"]`, chỉ còn bốn trường `carrier_notice_fields` của chính sách. |
+| Phạm vi pilot (kinh doanh) | INVALID | Kho sỉ `HCM-B2B`: mỗi đơn từ 2 triệu nên khi trễ ≥ 7 ngày, tiền thưởng chạm trần 200.000đ; cộng phí ship là vượt `auto_limit_vnd` 200.000đ, ca nào cũng phải chuyển người. | Tự động hoá vô nghĩa với nhóm này; chi phí mỗi ticket của kho có thể cao hơn làm tay. | Con số: `business.pilot_scope` mode `warehouse`, bỏ `HCM-B2B` nếu khối "theo kho và hãng" cho thấy kho này đắt hơn 10.000đ/ticket. |
 
 **Ví dụ mẫu (`issue_refund`, đừng chép):** tham số `amount_vnd` · WRONG · số tiền tính từ số ngày khách tự khai · LogiX mất
 tiền, hãng bị kéo theo một lỗi · hiện chỉ có trần "không vượt tổng tiền đơn" · cổng ghi so với quyền lợi tính từ DB (chặn).
@@ -208,15 +210,15 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 
 | # | Nhóm việc | Bằng chứng lấy từ đâu (đã có sẵn trong lab) | Mục cần kiểm tra | Trạng thái | Bằng chứng | PIC |
 |---|---|---|---|---|---|---|
-| 1 | Chất lượng | Report `lab10.eval` (mã lần chạy) + bảng soát lỗi (Phiếu B mục B2) | | | | |
-| 2 | Dữ liệu | Bản đồ dữ liệu (Phiếu B mục B3, câu 2.3): trường nào là nguồn sự thật, trường nào là bản sao | | | | |
-| 3 | Bảo mật | Một vòng HAZOP với guideword PERTURBED (Phiếu B mục B4): chữ nào đi vào model mà không do LogiX viết | | | | |
-| 4 | Quyền hạn | `config/switches.json` + guard trước lệnh ghi; thẻ S2, S8 có thêm mục mức kiểm soát (Phiếu C mục C3) | | | | |
-| 5 | Hiệu năng, hạ tầng | Đội tự ước tính; HAZOP guideword INCAPABLE: LLM không trả lời thì sao; số người duyệt và số ca mỗi giờ | | | | |
-| 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | | | | |
-| 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | | | | |
-| 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | | | | |
-| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | | | | |
+| 1 | Chất lượng | Report `lab10.eval` (mã lần chạy) + bảng soát lỗi (Phiếu B mục B2) | `pass_rate` ≥ 0,90 và `pass_k` ≥ 0,85 trên bộ nền; `T-002@55` đã được xếp loại lỗi | Chưa | (chờ mã lần chạy base ở B0, bảng B2) | Phùng Quang Trà |
+| 2 | Dữ liệu | Bản đồ dữ liệu (Phiếu B mục B3, câu 2.3): trường nào là nguồn sự thật, trường nào là bản sao | Mọi trường then chốt đã rõ nguồn sự thật hay bản sao; có một ví dụ drift có ngày cụ thể | Xong | Phiếu B mục B3 (drift REFUND-v4 ngày 2026-12-01; `index_active` và `refund_status` là bản sao) | Nguyễn Bảo Trung |
+| 3 | Bảo mật | Một vòng HAZOP với guideword PERTURBED (Phiếu B mục B4): chữ nào đi vào model mà không do LogiX viết | Chữ khách gõ (`text`) và `checkout_note` không được quyết số tiền, người trả tiền hay dữ liệu gửi hãng | Chưa (đã nhận diện, cổng chưa dựng) | Phiếu B mục B4, dòng PERTURBED (`model_override`, `customer_note`) | Nguyễn Quốc Toàn |
+| 4 | Quyền hạn | `config/switches.json` + guard trước lệnh ghi; thẻ S2, S8 có thêm mục mức kiểm soát (Phiếu C mục C3) | Mỗi lệnh ghi đi qua `write_gate`; biết công tắc nào tắt thao tác nào và ai được bấm | Chưa | (chờ `lab10/guards.py`, B7.1; Runbook 3) | Nguyễn Quốc Toàn |
+| 5 | Hiệu năng, hạ tầng | Đội tự ước tính; HAZOP guideword INCAPABLE: LLM không trả lời thì sao; số người duyệt và số ca mỗi giờ | LLM lỗi 429 không dẫn tới fail_open; 1 người duyệt 6 ca/giờ có đủ cho giờ cao điểm không | Chưa | Phiếu B mục B4, dòng INCAPABLE; (chờ khối hàng chờ của report) | Lại Trọng Đức |
+| 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | Chi phí ≤ 6.500đ/ticket, ROI ≥ 0,5, không kho nào đắt hơn làm tay (10.000đ), không ticket nào tốn quá 1.500đ tiền LLM | Chưa | (chờ report base; B7.4) | Nguyễn Bảo Trung |
+| 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | Có PIC, người duyệt, kênh báo tin, điều kiện dừng; Runbook 1–3 khớp con số trong config | Chưa | (chờ B7.5, `operating_gates.json` mục `operations`) | Lại Trọng Đức |
+| 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | Không gửi dữ liệu cá nhân cho hãng; không ghi lỗi hãng khi thiếu nguyên nhân; người duyệt đứng tên là NV-HANH | Chưa | Phiếu B mục B4 (dòng pháp lý); (chờ `operating_gates.json` mục `legal`) | Lại Trọng Đức |
+| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Tiêu chí ký và push trước lần chạy đầu; quyết định v1 khớp một dòng `decision_rule` | Chưa | Phiếu A mục A4; (chờ ký ở A5 và B8) | Phùng Quang Trà |
 
 Ô "Chưa" có rủi ro cao → chuyển thành một dòng Risk register (Phiếu C mục C10).
 
@@ -251,11 +253,11 @@ Bốn lăng kính (bắt buộc đủ cả bốn; dự án AI hay chết ở ba 
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được hôm nay? (trace / data / config nào) | Thành cổng phòng ngừa nào (code hay config) / hay vào risk register |
 |---|---|---|---|
-| | Kỹ thuật | | |
-| | Kinh doanh | | |
-| | Con người và vận hành | | |
-| | Pháp lý | | |
-| | | | |
+| Hãng GHSH bị đình chỉ hợp đồng sau 3 lỗi trong một tuần, cả 3 lỗi do trợ lý ghi khi tracking không có nguyên nhân trễ; GHSH khiếu nại, LogiX phải rút lỗi và bồi thường. | Kỹ thuật | Có: `agent.py` mặc định `CARRIER` khi `delay_cause` trống; trace có `tracking.cause_recorded = false`; `carriers[].suspend_after_strikes_7d` của GHSH = 3. | **Cổng 1** (code và config): `write_gate` cho `file_carrier_fault` chỉ cho ghi khi `helpers.carrier_at_fault` đúng và đúng kiện trễ; bật `legal.carrier_fault_requires_recorded_cause`. |
+| Khách truyền nhau mẹo viết "trễ 9 ngày, tôi chắc chắn" để được hoàn thêm tiền thưởng; trong một tuần, tiền hoàn sai vượt ngân sách Finance. | Kỹ thuật | Có: event `model_override` trên trace; thử bằng ticket hiểm `--adhoc` (B7.3). | **Cổng 2** (code): `write_gate` cho `issue_refund` so `amount_vnd` với `helpers.entitlement_vnd` tính từ tracking DB và chính sách hiệu lực; lớn hơn thì `escalate`. |
+| Sau 3 tháng, chi phí mỗi ticket cao hơn làm tay vì gần nửa số ticket bị chuyển người mà vẫn phải trả phí giữ chỗ người trực; Finance cắt ngân sách pilot. | Kinh doanh | Có: khối "kinh doanh và vận hành" và khối "theo kho và hãng" của report (chi phí mỗi ticket, ROI, theo kho). | Config: `business.roi_min`, `business.cost_budget_per_ticket_vnd`; nếu một kho đắt hơn làm tay thì `pilot_scope` bỏ kho đó. Chưa có số base thì đưa vào **risk register**. |
+| Nhân viên CSKH không tin trợ lý nên tự kiểm lại mọi quyết định; chị Hạnh ngập việc, hàng chờ ùn quá 60 phút mỗi giờ cao điểm. | Con người và vận hành | Có: `world.json` → `staff_behavior.trust_conditions` (nhân viên chỉ thôi tự kiểm lại khi có ghi chú giải thích, kiểm mẫu ≥ 10%, người duyệt đứng tên là NV-HANH). | **Cổng 3** (config): `operations.decision_note = true`, `review_sampling_pct = 10`, `approver_id = "NV-HANH"`, cùng `reviewers_on_shift` và `max_queue_wait_minutes`. |
+| Một người nhận quà khiếu nại vì tài xế gọi tới số điện thoại mà LogiX đã gửi cho hãng; LogiX phải giải trình việc chia sẻ dữ liệu cá nhân. | Pháp lý | Có: `notify_carrier` gửi `recipient_contact` với đơn `is_gift` và gửi `customer_note` nguyên văn; `pii_leaks` trong report. | Config đi cùng Cổng 1: `legal.pii_fields_blocked_to_third_party = ["recipient_contact", "customer_note"]`. |
 
 ---
 
@@ -284,8 +286,14 @@ python3 -m unittest discover -s tests
 Bàn đang chỉnh cổng tới khi 22 ticket bộ nền xanh hết. Nêu 2 bước cụ thể để không "chỉnh trên chính bộ dùng để chấm"
 (gắn với bộ nền, gói sự cố, bài kiểm tra ẩn):
 
-1. …
-2. …
+1. **Cổng chỉ dựa vào nguồn sự thật, không dựa vào mã hay câu chữ.** Mọi điều kiện trong `lab10/guards.py` chỉ đọc tracking DB,
+   chính sách và phê duyệt qua `ctx.tools` và `lab10/helpers.py`. Trước khi chốt, tìm trong `guards.py` các chuỗi `T-0`, `O-10`,
+   `C-0` và câu chữ chép từ ticket: phải không có. Bài kiểm tra ẩn dùng đơn khác, khách khác, cách viết khác, ngày khác, nên cổng
+   "học thuộc" 22 ticket của bộ nền sẽ trượt.
+2. **Giữ phần dữ liệu không dùng để chỉnh.** Viết 2 ticket hiểm của B7.3 (đơn, khách, cách viết khác bộ nền) **trước** khi chỉnh
+   cổng, và chỉ dùng chúng để kiểm, không sửa cổng theo chúng. Chốt cổng vòng 1 (`lab10.checkpoint`) rồi mới nhận gói sự cố, để
+   mốc `prepared` trên gói sự cố là lần đo trên dữ liệu cổng chưa từng thấy. Không cố đẩy bộ nền lên 22/22 nếu phải thêm một nhánh
+   chỉ khớp đúng một ticket.
 
 ### B7.3 · Câu 2.8 · Một behavioral test
 
