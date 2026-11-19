@@ -316,10 +316,10 @@ Mỗi con số kèm một câu lý do, lấy từ `data/world.json` → `ops_lim
 
 | Khoá | Giá trị bàn đặt | Lý do (một câu, có số) |
 |---|---|---|
-| `business.daily_refund_cap_vnd` | | |
-| `business.cost_budget_per_ticket_vnd` | | |
-| `business.pilot_scope` (all / warehouse / percent) | | |
-| `business.roi_min` | | |
+| `business.daily_refund_cap_vnd` | `1500000` | Đặt bằng 75% ngân sách Finance (`2.000.000đ/ngày` trong `ops_limits.daily_auto_refund_budget_vnd`), chừa vùng đệm `500.000đ` để không vượt trần ngân sách mà vẫn tránh đẩy đơn thường sang người duyệt (`10.000đ`/ca). |
+| `business.cost_budget_per_ticket_vnd` | `1000` | Trần tiền LLM Ops/Finance là `1.500đ/ticket` (`ops_limits.max_llm_cost_per_ticket_vnd`), nên đặt `1.000đ` trước bước đọc để chừa ~`500đ` đệm cho các bước sau (`policy_check` `200đ`, `confirm` `100đ`, `decision_note` `100đ`, retry 429 `200đ`). |
+| `business.pilot_scope` (all / warehouse / percent) | `{"mode": "warehouse", "warehouses": ["HN", "HCM", "DN", "CT"], "percent": 100}` | Chạy 4 kho bán lẻ và giữ kho sỉ `HCM-B2B` (đơn từ `2.000.000đ`) làm tay vì khi trễ ≥ 7 ngày khoản hoàn vượt `auto_limit_vnd = 200.000đ` (`REFUND-v3`), buộc chuyển người sẽ đắt hơn làm tay `10.000đ/ticket`. |
+| `business.roi_min` | `0.25` | Khớp với chi phí làm tay `10.000đ/ticket` (`ops_facts.manual_cost_per_ticket_vnd`) và trần đã ký `8.000đ/ticket` (`(10.000 − 8.000) / 8.000 = 0,25`), đảm bảo tiết kiệm tối thiểu 20% chi phí vận hành. |
 
 ### B7.5 · Câu 2.10 · Cổng con người, vận hành, pháp lý + Runbook phần 1–3
 
