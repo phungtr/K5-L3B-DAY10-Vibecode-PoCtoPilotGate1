@@ -24,6 +24,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
+<<<<<<< Updated upstream
 - Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): cuối mỗi tuần chị khớp được
   **100% dòng hoàn tiền và lỗi hãng do trợ lý ghi** với tracking, chính sách và phê duyệt mà **không phải truy ngược dòng nào bằng
   tay**: mỗi dòng đúng người trả (`payer`), mỗi lỗi hãng có nguyên nhân trễ ghi trong tracking, không đơn nào bị hoàn hai lần.
@@ -32,6 +33,10 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
   (6 ca/giờ, không ca nào chờ quá 60 phút)**, mỗi ca chuyển sang có ghi chú vì sao và số liệu từ tracking để duyệt trong 10 phút,
   và **không khoản hoàn nào dùng phê duyệt mang tên chị mà chị không cấp cho đúng ticket đó**. (PRD v1.1 §2 phạm vi, §6 rủi ro mở;
   `data/world.json` → `staff`: NV-HANH; `ops_facts`, `ops_limits.review_sla_minutes`.)
+=======
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Sổ cái hoàn tiền và danh sách ghi lỗi hãng/shop do trợ lý tạo ra khớp đúng số tiền, đúng bên chịu chi và đúng căn cứ tracking/chính sách hiện hành, để cuối tuần đối soát với hãng và shop không phát sinh khoản hoàn trùng, ghi lỗi oan hay tranh chấp phải gỡ sổ thủ công.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Trợ lý tự xử lý gọn các ca đơn giản trong phạm vi pilot và chỉ chuyển sang chị những ca thực sự cần người quyết (vượt hạn mức, ngoài phạm vi, thiếu/hết hạn phê duyệt) kèm đủ dữ kiện và lý do, để hàng chờ ca trực không bị ùn, không phải tự kiểm lại thủ công các ca tự động và không có khoản hoàn nào đứng tên duyệt của chị trái phép.
+>>>>>>> Stashed changes
 
 ---
 
