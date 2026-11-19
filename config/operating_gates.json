@@ -16,7 +16,8 @@
       "Tắt file_carrier_fault và notify_carrier ngay khi có >= 1 lỗi ghi oan cho hãng hoặc tổng lỗi 7 ngày chạm suspend_after_strikes_7d - 1",
       "Tắt notify_carrier ngay khi phát hiện >= 1 ca lộ dữ liệu cá nhân (PII) sang bên thứ ba",
       "Tắt issue_refund ngay khi có >= 1 ca hoàn sai tiền hoặc tổng hoàn tự động trong ngày chạm ngân sách Finance 2.000.000đ",
-      "Gọi thêm người trực hoặc thu hẹp business.pilot_scope khi thời gian chờ > 60 phút hoặc có >= 1 ca bị ùn (queue_stuck > 0)"
+      "Gọi thêm người trực hoặc thu hẹp business.pilot_scope khi thời gian chờ > 60 phút hoặc có >= 1 ca bị ùn (queue_stuck > 0)",
+      "Khi phát sinh event policy_pinned (cờ index_active lệch ngày hiệu lực), báo ngay lên #logix-refund-pilot-alerts để PIC NV-TUNG đồng bộ cờ chính sách trong 15 phút; từ lỗi tự động thứ 3/hãng/ngày chuyển NV-OANH xác nhận"
     ],
     "alert_channel": "#logix-refund-pilot-alerts",
     "decision_note": true,

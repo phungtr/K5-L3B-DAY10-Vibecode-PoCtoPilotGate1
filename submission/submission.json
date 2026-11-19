@@ -1,12 +1,17 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
+  "team": "K5-L3B-DAY10-Vibecode-PoCtoPilotGate1",
+  "members": [
+    "PhungQuangTra-2A202604094",
+    "NguyenQuocToan-2A202604098",
+    "NguyenBaoTrung-2A202604013",
+    "LaiTrongDuc-2A202604019"
+  ],
+  "incident": "S3",
+  "decision_v1": "Tiếp tục",
   "decision_v2": "",
   "three_lines": {
-    "environment_assumption": "",
+    "environment_assumption": "Thiết kế giả định trường delay_cause và ngày giao trong tracking DB do điểm phát/hãng nhập đúng sự thật và phụ lục chính sách mới được cập nhật lên hệ thống đúng trước ngày hiệu lực as_of, trong khi thực tế bão lũ hoặc quá tải dễ gây bỏ trống, nhập sai hoặc trễ đồng bộ.",
     "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "measure_in_pilot": "Đo lại độ chính xác và tỉ lệ thiếu delay_cause qua đối soát tuần với hãng/shop, tỉ lệ chuyển người cùng thời gian chờ thực tế giờ cao điểm sau bão, và chi phí mỗi ticket kèm ROI thực tế theo từng kho so với ngưỡng 8.000đ / 0,25."
   }
 }
