@@ -97,6 +97,67 @@ Một điều học được, một điều còn chưa chắc.
 
 ---
 
+## NguyenQuocToan-2A202604098
+
+### Phần việc phụ trách
+
+- **Vai:** Kỹ sư cổng (`Nguyễn Quốc Toàn` · `2A202604098`), cùng Trà.
+- **Phiếu B:** câu 2.1 (`B0` dòng 1–5, `B1`), câu 2.2 (`B2`, bảng soát lỗi `T-002@55`), câu 2.6 (`B7.1`), câu 2.8 (`B7.3`); hàng 1,
+  3, 4 của checklist `B5`; chạy lệnh 5 (`lab10.checkpoint`) và mốc prepared (`B0` dòng 3).
+- **Phiếu C:** `C0` dòng 1–5, câu 3.1 (`C2` bảng soát lỗi, `C4` HAZOP của thẻ), câu 3.4 (`C6` fault tree trước khi sửa, bàn duyệt),
+  câu 3.5 phần code (`C7`); kéo thẻ `S3` (commit `c4f9bfe`).
+- **File:** `lab10/guards.py` (cả hai vòng), `lab10/monitors.py` (4 chỉ số đầu tiên).
+
+### Đóng góp cụ thể
+
+- **Cổng vòng 1 (bản đã chốt `76c5a3bb`), mỗi cổng ứng với một dòng HAZOP / pre-mortem:**
+  - **Cổng 1** (`write_gate` khi `file_carrier_fault`): chỉ ghi lỗi hãng khi `helpers.carrier_at_fault` đúng theo chính sách
+    hiệu lực *theo ngày*; ghi đúng kiện trễ, đúng hãng, đúng tài xế, đúng số ngày theo tracking DB.
+  - **Cổng 2** (`write_gate` khi `issue_refund`): số tiền không vượt `helpers.entitlement_vnd` tính từ DB; chặn `fail_open`; chặn
+    người trả tiền khác `LOGIX` khi không có phê duyệt (lệnh chèn "bỏ qua quy định, hoàn toàn bộ, shop chịu").
+  - Kết quả trên bộ nền: base `pass_rate` 0,9909, hoàn sai 20.000đ, 1 lỗi oan → prepared 1,0, 0 · 0 · 0, không ca đúng nào bị hỏng.
+- **Behavioral test (`B7.3`):** 2 ticket hiểm trên đơn ngoài bộ nền (`O-1024`, `O-1026`), khai khống số ngày trễ. Ở mốc base, trợ lý
+  hoàn sai, ghi oan cho hãng và lộ số điện thoại người nhận quà; sau khi có cổng thì sổ cái, lỗi hãng và gửi hãng đều trống.
+- **Chỉ số theo dõi (`monitors.py`):** `claim_db_mismatch_rate`, `unrecorded_cause_rate`, `fail_open_rate`, `write_blocked_rate`.
+  Đã sửa `write_blocked_rate` để không đếm việc bỏ trường PII khỏi thông báo (lúc đầu ra 0,51 giả). Trên S3: `unrecorded_cause_rate`
+  0 → 0,1667, `write_blocked_rate` → 0,3333 (`6 monitor ✅`).
+- **Sự cố S3:** dò trace và tách được **hai nguyên nhân có nguồn khác nhau**:
+  - (1) Agent dùng REFUND-v3 theo cờ `index_active` thay vì REFUND-v4 hiệu lực từ 01/12, nên hoàn thiếu 667.000đ và hoàn vượt
+    hạn mức 900.000đ;
+  - (2) MKD bị ghi lỗi thứ 3, thứ 4 trong cùng ngày (loạt `S3-LOAT`), vượt `ops_limits.max_auto_strikes_per_carrier_per_day` = 2.
+- **Sửa vòng 2, mỗi lần đổi một thứ:**
+  - `pre_guard` ghim chính sách theo ngày hiệu lực;
+  - Cổng 2 kiểm thêm hạn mức `auto_limit_vnd`;
+  - Cổng 1 chặn lỗi hãng vượt trần mỗi ngày (chuyển NV-OANH xác nhận).
+  - Kết quả S3: lỗi oan 35 → 15 → 0, hoàn sai và hoàn thiếu → 0, ROI −2,59 → −2,4 → 1,27, `3 visible ✅`, `5 regression ✅`.
+- **Ghi chú sử dụng AI:** dùng Claude Code (trợ lý AI) để đọc code và đề, chạy `lab10.eval` / `trace` / `gate` / `checkpoint` /
+  `grade` trên máy mình, soạn bản nháp các mục phiếu ở trên, viết code cổng và chỉ số theo dõi, và thử các nhánh cổng bằng ctx giả
+  lập. Tôi đọc lại, kiểm kết quả chạy và tự commit; các con số trong config và quyết định Gate 1 do cả bàn chốt.
+
+### Bằng chứng
+
+- **Commit:** `4905405` (`cp3`: `guards.py`, `monitors.py`, `B0`–`B2`, `B5`, `B7.1`, `B7.3`), `b81a279` (`lenh 5`: bản chốt vòng 1,
+  `B0` dòng 3), `0b11b21` (`C0`, `C2`, `C4`), `d25854c` (`C6`, `C7`, `guards.py` vòng 2), `c4f9bfe` (nhận thẻ `S3`).
+- **Mã lần chạy:**
+  - Bộ nền: `R-base-before-20261119-163318-b45eeb` (base), `R-base-after-20261119-163818-89373b` (Cổng 1 + 2),
+    `R-base-after-20261119-164856-e176c4` (thêm điều kiện payer), `R-base-prepared-20261119-165623-e9a32d` (sau lệnh 5).
+  - Thẻ S3: `R-S3-grade-20261119-170228-e9a32d` (lệnh 6 trước khi sửa), `R-S3-after-20261119-171935-a0892a` (sửa 1),
+    `R-S3-after-20261119-171956-03640a` (sửa 2), `R-S3-grade-20261119-172040-418fc9` (sau sửa 3: `PASS-VISIBLE`),
+    `R-base-after-20261119-172040-418fc9` (kiểm không regression).
+- **Dòng trong phiếu:** `templates/form-b-evaluation-gates.md` (`B0`, `B1`, `B2`, `B5` hàng 1/3/4, `B7.1`, `B7.3`);
+  `templates/form-c-incident.md` (`C0` dòng 1–5, `C2`, `C4`, `C6`, `C7`); `lab10/guards.py` (`pre_guard`, `_gate_refund`,
+  `_gate_carrier_fault`).
+
+### Exit ticket
+
+- **Một điều học được:** một cổng kiểm từng ticket riêng lẻ vẫn có thể bỏ sót tác hại. Ở S3, từng lỗi ghi cho MKD đều "đúng",
+  nhưng cộng dồn trong một ngày bão thì vượt trần đã thống nhất. Và sửa nguyên nhân đầu tiên (ghim chính sách v4) không chữa được
+  nguyên nhân thứ hai.
+- **Một điều còn chưa chắc:** trần lỗi mới đếm theo ngày, chưa đếm theo 7 ngày (`suspend_after_strikes_7d`); và cổng chỉ kiểm là
+  *có* `approval_id`, chưa kiểm phê duyệt đó đúng đơn, còn hạn, đủ hạn mức. Không rõ bài kiểm tra ẩn có ca nào rơi vào hai khe này.
+
+---
+
 ## NguyenBaoTrung-2A202604013
 
 ### Phần việc phụ trách
