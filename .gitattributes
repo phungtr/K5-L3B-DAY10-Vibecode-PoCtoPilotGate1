@@ -1,0 +1,8 @@
+# Line endings: keep every text file LF on every machine, so the locked files match lab10/MANIFEST.json.
+* text=auto eol=lf
+
+# The acceptance criteria were signed on Windows with CRLF line endings (commit "Sign acceptance criteria").
+# Check this file out as CRLF on every machine so its sha256 matches config/acceptance_criteria.lock.
+# The stored content is unchanged; never edit the file itself.
+config/acceptance_criteria.json text eol=crlf
+submission/config/acceptance_criteria.json text eol=crlf
