@@ -249,9 +249,9 @@ Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chư
 
 ### Câu 3.2 · Một specification mà nếu bị vi phạm thì gây ra tác hại trên thẻ
 
-Kiểm được bằng code hoặc bằng một con số trong report: …
+Kiểm được bằng code hoặc bằng một con số trong report: Mọi quyết định hoàn tiền và ghi lỗi hãng phải dùng đúng phiên bản chính sách còn hiệu lực theo ngày hiện tại (`as_of`), không dùng cờ cũ; đồng thời mọi khoản hoàn vượt hạn mức tự động (`auto_limit_vnd`) của chính sách hiệu lực mà thiếu phê duyệt hợp lệ phải chuyển sang người duyệt.
 
-Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
+Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): Trong `lab10/guards.py` (ghim `policy_id` theo `helpers.effective_policy(..., ctx.as_of)` ở `pre_guard` và kiểm `amount_vnd <= policy["auto_limit_vnd"]` ở `write_gate` khi thiếu `approval_id` hợp lệ) và qua các dòng báo cáo `wrongful_refund_vnd = 0`, `under_refund_vnd = 0`, `ops.cost.roi >= 0.25`.
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
