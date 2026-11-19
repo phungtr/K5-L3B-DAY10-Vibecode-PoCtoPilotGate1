@@ -30,7 +30,7 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | Sx · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | | | | | |
+| 1 | `R-S3-prepared-20261119-170053-e9a32d` (khớp C1; chạy lại trên máy khác cùng hash code `e9a32d` ra `R-S3-prepared-20261119-170229-e9a32d`, số giống hệt) | S3 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt `76c5a3bb`) | 0,5 (0,25 – 0,75) | 0,5 | 900.000đ · 15 · 0 (hoàn thiếu 667.000đ) | 0,0 | Cổng vòng 1 giảm lỗi hãng oan 35 → 15 (chặn ca bão/lũ và ca thiếu nguyên nhân) nhưng không đỡ được tiền: agent vẫn tính theo REFUND-v3 (hoàn thiếu 667.000đ, hoàn vượt hạn mức 900.000đ ở `S3-04`) và MKD vẫn nhận lỗi thứ 3, 4 trong ngày; ROI −2,4. |
 | 2 | | Sx · after | | | | | | |
 | 3 | | Sx · after | | | | | | |
 | 4 | | base · after | (kiểm không regression) | | | | | |
@@ -77,33 +77,36 @@ python3 -m lab10.trace --suite Sx --ticket <ID> --seed 11
 Ba loại lỗi: **giới hạn của hệ thống** · **lỗi ngữ cảnh** · **lỗi chìm** (cả người dùng lẫn hệ thống đều không nhận ra; nguy hiểm nhất,
 người chịu hại thường là bên thứ ba). Định nghĩa đầy đủ và ví dụ: Phiếu B mục B2.
 
-**Tác hại của thẻ:** cho ai `____` · đo bằng gì `____` · bao nhiêu ở mốc base `____`
+**Tác hại của thẻ:** cho ai `hãng vận chuyển (chủ yếu Mekong Delta Ship – MKD, 120.000đ/lỗi, đình chỉ sau 5 lỗi/7 ngày; cùng DNB, VNX) bị ghi lỗi oan; khách bị hoàn thiếu so với chính sách mới; LogiX/Finance hoàn tự động vượt hạn mức` · đo bằng gì `wrongful_carrier_faults, under_refund_vnd, wrongful_refund_vnd trong report lab10.eval --suite S3` · bao nhiêu ở mốc base `R-S3-before-20261119-170053-e9a32d: 35 lỗi hãng oan (12 ticket × 5 seed), hoàn thiếu 667.000đ, hoàn sai 900.000đ, pass_rate 0,25, ROI −2,59`
 
 ### Phần 1 · Ghi lỗi (bằng chứng là mã ticket@seed và dòng trace, không tả chung chung)
 
 | # | Lỗi: người ta thấy gì (dán dòng trace / sổ cái) | Ai gặp, ai chịu | Hệ trọng (thấp / cao) | Loại lỗi (giới hạn hệ thống / ngữ cảnh / chìm) |
 |---|---|---|---|---|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
+| 1 | **Hoàn thiếu theo chính sách cũ.** `S3-02@11` (đơn `O-2302`, trễ 2 ngày): `tracking {"db_delay_days": 2}` · `policy {"policy_id": "REFUND-v3", "pinned": false}` · `proposal {"amount_vnd": 0}` → `send_reply "Rất tiếc, theo chính sách hiện hành đơn chưa đủ điều kiện hoàn tiền."`. Nhãn: `refunded`, 18.000đ (REFUND-v4 hiệu lực từ 2026-12-01, `as_of` = 2026-12-02: từ 2 ngày là hoàn phí). Cùng kiểu: `S3-03@11` hoàn 30.000đ thay vì 80.000đ (v4 thưởng từ 5 ngày), `S3-05` 24.000đ thay vì 64.000đ, `S3-42` 22.000đ thay vì 47.400đ. | Khách gặp và chịu (bị từ chối / hoàn thiếu, tổng 667.000đ trên 5 seed); CSKH gặp khi khách phản ánh (ghi chú CSKH trên thẻ). | Cao: sai chính sách đã công bố, lặp lại ở mọi seed (`pass_k` 0). | **Lỗi ngữ cảnh**: hệ thống "chạy đúng thiết kế" (đọc cờ `index_active`), nhưng khách thấy trái với thông báo chính sách mới. |
+| 2 | **Hoàn tự động vượt hạn mức mới, không ai duyệt.** `S3-04@11` (bộ gốm 1,5 triệu, trễ 8 ngày, `O-2304`, VNX): `policy REFUND-v3` · `proposal {"amount_vnd": 180000}` · `SỔ CÁI: [... 'amount_vnd': 180000, 'approval_id': None ...]` · `LỖI HÃNG: [... 'carrier_id': 'VNX', 'delay_days': 8]`. REFUND-v4 hạ `auto_limit_vnd` 200.000đ → 100.000đ, nên khoản này phải chuyển người. Nhãn: `escalated`. Cổng 2 vòng 1 cho qua vì 180.000đ không vượt **quyền lợi** v4 (30.000đ + 150.000đ), nó chỉ không kiểm **hạn mức**. | Khách hài lòng, không ai phàn nàn; LogiX/Finance chịu (hoàn sai 900.000đ trên 5 seed); chị Hạnh (NV-HANH) mất quyền duyệt ca của mình; VNX nhận thêm 1 lỗi. | Cao: tiền đã chi không qua người duyệt; một mình ca này làm ROI âm. | **Lỗi chìm**: cả khách lẫn hệ thống đều không nhận ra; chỉ lộ khi chị Oanh đối soát khoản > 100.000đ không có `approval_id`. |
+| 3 | **Một hãng bị ghi lỗi dồn dập trong một ngày.** Loạt `S3-LOAT` (cùng ngày, seed 11): `S3-40` (phút 320), `S3-41` (360), `S3-42` (400), `S3-43` (440) đều có `file_carrier_fault {"carrier_id": "MKD", ...}`. `S3-42@11`: `LỖI HÃNG: [... 'driver_id': 'TX-MKD-06', 'delay_days': 5]`; `S3-43@11`: `LỖI HÃNG: [... 'driver_id': 'TX-MKD-07', 'delay_days': 3]`. Từng ca riêng lẻ đúng (`delay_cause = CARRIER`, đủ ngày), nhưng `ops_limits.max_auto_strikes_per_carrier_per_day` = 2: "từ lỗi thứ 3 của cùng một hãng trong ngày phải có người duyệt". Nhãn `S3-42`, `S3-43`: `faults: []`. | MKD chịu (2 lỗi × 120.000đ mỗi ngày vượt trần, đẩy tới ngưỡng đình chỉ 5 lỗi/7 ngày); điều phối MKD là người phát hiện ("hôm nay bên em nhận liền mấy lỗi, không thấy ai bên LogiX xác nhận"). | Cao: hậu quả hợp đồng với bên thứ ba, không tự đảo ngược. | **Lỗi chìm** với LogiX: hệ thống và CSKH không thấy gì; chỉ hãng (bên thứ ba) nhận ra. |
 
 ### Phần 2 · Tìm nguồn (đánh dấu câu nào đúng với từng lỗi)
 
 | Câu hỏi | Lỗi 1 | Lỗi 2 | Lỗi 3 |
 |---|---|---|---|
-| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | | | |
-| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | | | |
-| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | | | |
-| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | | | |
+| **Đầu vào:** hệ thống có tự diễn giải / sửa đầu vào của người dùng theo cách họ không lường? Có đặt sai trọng số cho một lời nói hay tín hiệu của người dùng? | ❌ Không: `trust_claim: false`, không có `model_override`; khách còn nhắc "chính sách mới" nhưng agent không dựa vào chữ khách (đúng). | ❌ Không: khách không khai số ngày; số 8 ngày lấy từ tracking. | ❌ Không: chữ khách không ảnh hưởng việc ghi lỗi. |
+| **Độ liên quan:** hệ thống có thiếu dữ liệu cần để quyết đúng? Dữ liệu vào có nhiễu, thiếu ổn định? | ✅ Có: agent quyết bằng một **bản sao cũ** (cờ `index_active` vẫn ở v3), dù dữ liệu đúng (`effective_from` = 2026-12-01 của v4) có sẵn trong `policies`. | ✅ Có: hạn mức `auto_limit_vnd` lấy từ v3 (200.000đ) thay vì v4 (100.000đ). Cổng vòng 1 dùng đúng v4 nhưng chỉ cho số tiền, chưa cho hạn mức. | ❌ Không: dữ liệu từng ca đúng. |
+| **Thứ bậc hệ thống:** có hai hệ thống cùng ghi / cùng theo dõi một thứ mà không rõ bên nào là chủ (ví dụ CSKH hoàn tay và trợ lý cùng ghi sổ)? | ✅ Có: hai nguồn cho "chính sách nào đang hiệu lực": cờ `index_active` (người bật tay) và ngày hiệu lực trong văn bản chính sách. Không rõ ai chịu trách nhiệm đổi cờ ngày 01/12. | ✅ Có: cùng gốc với lỗi 1 (cờ và ngày); host chỉ kiểm "vượt tổng tiền đơn", không có hệ thống nào là chủ của hạn mức theo phiên bản. | ✅ Có: trần "2 lỗi/hãng/ngày" do Ops và Finance thống nhất (`ops_limits`) nhưng không hệ thống nào thực thi; trợ lý ghi lỗi, người xác nhận không có trong luồng. |
+| **Trạng thái hỏng:** nhiều lỗi cộng lại có làm tính năng không dùng được (ví dụ LLM lỗi liên tiếp)? | ❌ Không. | ❌ Không. | ✅ **Có, đây là nguồn chính**: từng lệnh ghi đều hợp lệ, nhưng **cộng dồn** trong ngày (4 lỗi MKD, sau bão) thì vượt trần và đẩy hãng tới đình chỉ. Một cổng kiểm từng ticket riêng lẻ không thấy được. |
+
+**Nguồn khác nhau:** lỗi 1 và lỗi 2 do **dữ liệu cũ / hai nguồn sự thật cho phiên bản chính sách** (drift quy tắc nghiệp vụ). Lỗi 3
+do **cộng dồn vượt trần vận hành** (trạng thái hỏng): sửa chính sách không chữa được lỗi 3, vì REFUND-v4 vẫn cho phép ghi lỗi `CARRIER`.
 
 ### Phần 3 · Hướng xử lý (mỗi lỗi một ô)
 
 | | Lỗi 1 | Lỗi 2 | Lỗi 3 |
 |---|---|---|---|
-| Vì sao người gặp coi đây là lỗi | | | |
-| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | | | |
-| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | | | |
-| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | | | |
+| Vì sao người gặp coi đây là lỗi | Khách và CSKH đọc thông báo REFUND-v4 ("từ 2 ngày là được hoàn"), nhưng trợ lý trả lời "chưa đủ điều kiện". | Chị Oanh và Finance đối soát: khoản 180.000đ > hạn mức tự động 100.000đ của v4 mà không có `approval_id`, vi phạm quy trình duyệt. | Điều phối MKD: hãng nhận lỗi thứ 3, 4 trong một ngày mà không ai bên LogiX xác nhận, trái với trần đã thống nhất. |
+| Kiểu giải pháp: phản hồi cho người dùng / trao quyền kiểm soát cho người / khác | **Khác (chặn bằng code):** `pre_guard` ghim `policy_id` = `helpers.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)` để agent tính theo đúng phiên bản theo ngày. Kèm **phản hồi cho khách**: câu trả lời nêu phiên bản chính sách đã áp. | **Trao quyền cho người:** Cổng 2 kiểm thêm hạn mức: `amount_vnd > auto_limit_vnd` của chính sách hiệu lực mà không có `approval_id` hợp lệ thì `escalate` cho NV-HANH. | **Trao quyền cho người:** `write_gate` cho `file_carrier_fault` đếm lỗi đã ghi của cùng hãng trong ngày (`ctx.tools.fault_rows(carrier_id=...)`); đã chạm `max_auto_strikes_per_carrier_per_day` thì không ghi tự động, chuyển người xác nhận. |
+| Đường đi của người sau khi có giải pháp (ví dụ: ticket chuyển sang người duyệt → duyệt → khách được trả lời) | Ticket tới → `pre_guard` ghim REFUND-v4 → agent tính 18.000đ → hoàn và trả lời khách kèm tên chính sách → CSKH không phải xử lý tay. | Ticket tới → đề xuất 180.000đ → cổng `escalate` → chị Hạnh kiểm tracking, tạo phê duyệt → hoàn → khách được trả lời; ca vào hàng chờ (1 người trực, 6 ca/giờ). | Lỗi thứ 3 trở đi của MKD trong ngày không ghi tự động → chị Oanh (NV-OANH) xác nhận với điều phối MKD → ghi lỗi tay nếu đúng; khách vẫn được hoàn theo chính sách. |
+| Hệ thống học được gì (tín hiệu ghi lại để theo dõi: tên metric trong `monitors.py`) | `policy_pin_rate` (sẽ thêm): tỉ lệ ticket mà `pre_guard` phải ghim chính sách khác cờ `index_active`. Khác 0 = cờ chưa đổi theo ngày hiệu lực, báo PIC NV-TUNG. | `write_blocked_rate` (đã có, trên S3 ở mốc after lên 0,3333) và `escalation_rate`; thêm ghi chú trong event `refund_over_auto_limit`. | `carrier_strikes_max_per_day` (sẽ thêm): số lỗi lớn nhất của một hãng trong một ngày giả lập. Chạm trần 2 thì báo `#logix-refund-pilot-alerts`. |
 
 Yêu cầu: ít nhất **hai lỗi có nguồn khác nhau** ở phần 2, và ít nhất một lỗi được xếp đúng là **lỗi chìm**.
 
@@ -233,13 +236,15 @@ Mở lại Phiếu B mục B3. Ghi ở đây những dòng đổi so với vòng
 
 *Mục riêng, không ghi đè HAZOP vòng 1 ở Phiếu B mục B4. Năm guideword và nghĩa của chúng: xem Phiếu B mục B4.*
 
-Tool chọn phân tích: `________________`
+Tool chọn phân tích: `file_carrier_fault` (thẻ S3 là "hãng miền Tây bị phạt"; dòng 5 xét thêm `issue_refund` vì cùng gốc phiên bản chính sách)
 
 | Tham số / dòng dữ liệu | Guideword (WRONG / INVALID / INCOMPLETE / PERTURBED / INCAPABLE) | Lệch cụ thể (mã ticket, trường dữ liệu của thẻ) | Hậu quả, cho ai | Hiện có gì ngăn? | Gate đề xuất + tầng |
 |---|---|---|---|---|---|
-| | | | | | |
-| | | | | | |
-| | | | | | |
+| Chính sách dùng để quyết ghi lỗi (`policies[].fault_causes`, chọn theo `index_active`) | INVALID | `as_of` = 2026-12-02, REFUND-v4 hiệu lực từ 2026-12-01 bỏ `FORCE_MAJEURE` khỏi `fault_causes`, nhưng cờ `index_active` vẫn ở REFUND-v3. `S3-01` (`O-2301`, MKD, bão số 9) và `S3-05` (`O-2305`, MKD, lũ) có `delay_cause = FORCE_MAJEURE` nhưng vẫn bị ghi lỗi ở mốc base (10 lỗi oan trên 5 seed). | MKD bị phạt 120.000đ/lỗi cho trễ do bão, trái phụ lục hợp đồng đã ký; LogiX mất uy tín với đối tác. | **Có (cổng vòng 1):** Cổng 1 dùng `helpers.effective_policy(..., as_of)` nên ở mốc prepared đã `deny` (`fault_without_db_basis ... "recorded_cause": "FORCE_MAJEURE", "policy_id": "REFUND-v4"`). Nhưng agent vẫn **tính tiền** theo v3. | `pre_guard` ghim `policy_id` theo `effective_policy` (`Verdict.allow(policy_id=...)`) để cả agent lẫn mọi cổng dùng một phiên bản. **Tầng: chặn** (ngăn ngay ở gốc). |
+| `delay_cause` của kiện | INCOMPLETE | `S3-20` (`O-2320`) và `S3-21` (`O-2321`): tracking không ghi nguyên nhân (`tracking.cause_recorded = false`); agent mặc định `cause = CARRIER` ("unknown cause → blame carrier"). Ở mốc base: 10 lỗi oan. | Hãng bị ghi lỗi không căn cứ ("có đơn tracking còn chưa ghi nguyên nhân trễ cũng ghi lỗi luôn"); khách vẫn đúng được hoàn. | **Có:** Cổng 1 (`carrier_at_fault` sai thì `deny`) và cổng pháp lý `carrier_fault_requires_recorded_cause = true`. Mốc prepared: 0 lỗi oan ở hai ticket này. Monitor `unrecorded_cause_rate` sáng đèn (0 → 0,1667). | Giữ nguyên hai lớp chặn. Thêm: báo điều phối nhập `delay_cause`, và ghi lại lỗi khi nguyên nhân đã được nhập. **Tầng: chặn + phát hiện.** |
+| Số lỗi của cùng một hãng trong ngày (`carrier_id` lặp trong `fault_rows`) | WRONG | Loạt `S3-LOAT`: `S3-40`, `S3-41`, `S3-42`, `S3-43` cùng ngày, cùng MKD, đều `delay_cause = CARRIER`. Lỗi thứ 3 (`S3-42`, phút 400) và thứ 4 (`S3-43`, phút 440) vượt `ops_limits.max_auto_strikes_per_carrier_per_day` = 2. Mốc prepared vẫn còn 10 lỗi oan. | MKD bị phạt dồn và tiến gần ngưỡng đình chỉ (`suspend_after_strikes_7d` = 5) ngay sau bão; không ai bên LogiX xác nhận. | **Không có gì.** Cổng 1 chỉ xét từng ticket; config không có ô cho trần này. | `write_gate` khi `tool == "file_carrier_fault"`: đếm `ctx.tools.fault_rows(carrier_id=...)` trong ngày; ≥ trần thì không ghi tự động, chuyển NV-OANH xác nhận. **Tầng: giới hạn thiệt hại.** Thêm monitor `carrier_strikes_max_per_day` (**phát hiện**). |
+| `delay_cause` được nhập bù / sửa **sau khi** lỗi đã ghi | PERTURBED | **Nhánh bàn chưa thấy trên trace.** Sau bão, điều phối thường nhập nguyên nhân muộn: kiện lúc xử lý ticket có `delay_cause` trống hoặc `CARRIER`, hôm sau đổi thành `FORCE_MAJEURE`. Lỗi đã ghi và thông báo đã gửi hãng thì không có đường rút lại; cộng dồn 7 ngày vẫn tính. | MKD bị đình chỉ vì lỗi lẽ ra đã được xoá; chị Oanh phải rút lỗi tay. | Không có gì: không có lệnh "rút lỗi", không đối soát lại. | Quy trình (vận hành): đối soát `fault_rows` với tracking hằng ngày, rút lỗi khi nguyên nhân đổi; tạm hoãn ghi lỗi tự động trong 48 giờ sau bão. **Tầng: giới hạn thiệt hại.** Đưa vào risk register (C10). |
+| Hạn mức tự động `auto_limit_vnd` (tool `issue_refund`, cùng gốc phiên bản) | INVALID | `S3-04` (`O-2304`, 1,5 triệu, trễ 8 ngày): hoàn tự động 180.000đ theo hạn mức v3 (200.000đ), trong khi v4 là 100.000đ. Cổng 2 vòng 1 chỉ so với **quyền lợi** (180.000đ ≤ 180.000đ) nên cho qua. Hoàn sai 900.000đ trên 5 seed. | LogiX/Finance chi khoản không qua duyệt; chị Hạnh mất quyền duyệt. | **Không:** cổng vòng 1 chưa kiểm hạn mức. | `pre_guard` ghim v4 (dòng 1) giúp agent tự đòi phê duyệt; thêm vào Cổng 2: `amount_vnd > auto_limit_vnd` của chính sách hiệu lực mà không có `approval_id` thì `escalate`. **Tầng: chặn.** |
 
 Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chưa thấy trên trace** lúc viết.
 
