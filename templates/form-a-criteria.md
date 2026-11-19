@@ -1,6 +1,6 @@
 # Phiếu A · Tiêu chí và cách đo · Khối 1 (phút 15–65)
 
-**Bàn:** ______ · **Người cầm bút chính:** vai Sản phẩm và kinh doanh (câu 1.3: Kỹ sư cổng; câu 1.2, 1.4: Vận hành và pháp lý)
+**Bàn:** `K5-L3B-DAY10-Vibecode-PoCtoPilotGate1` · **Người cầm bút chính:** vai Sản phẩm và kinh doanh (câu 1.3: Kỹ sư cổng; câu 1.2, 1.4: Vận hành và pháp lý)
 
 Điền phiếu này **trước khi chạy trợ lý lần nào**. Viết xong thì chép ngưỡng sang `config/acceptance_criteria.json`, ký ở phút 60–65,
 rồi mới chạy đánh giá. Khối 1 không sửa code.
@@ -24,8 +24,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Sổ cái hoàn tiền và danh sách ghi lỗi hãng/shop do trợ lý tạo ra khớp đúng số tiền, đúng bên chịu chi và đúng căn cứ tracking/chính sách hiện hành, để cuối tuần đối soát với hãng và shop không phát sinh khoản hoàn trùng, ghi lỗi oan hay tranh chấp phải gỡ sổ thủ công.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Trợ lý tự xử lý gọn các ca đơn giản trong phạm vi pilot và chỉ chuyển sang chị những ca thực sự cần người quyết (vượt hạn mức, ngoài phạm vi, thiếu/hết hạn phê duyệt) kèm đủ dữ kiện và lý do, để hàng chờ ca trực không bị ùn, không phải tự kiểm lại thủ công các ca tự động và không có khoản hoàn nào đứng tên duyệt của chị trái phép.
 
 ---
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | **Ghi lỗi hãng** (`file_carrier_fault`, bước 6 trong `lab10/agent.py`): trợ lý quyết định có ghi lỗi cho hãng vận chuyển hay không, và ghi cho cặp (hãng, kiện) nào. | **Ghi lỗi hãng tự động** (`file_carrier_fault` + `notify_carrier`): gây phạt tiền và nguy cơ đình chỉ hãng/tài xế ngoài LogiX (vd `GHSH`: phạt 150.000đ/lỗi, đình chỉ sau 3 lỗi/7 ngày). |
+| **Thước đo** (một câu, có đơn vị) | **Tỉ lệ ghi lỗi hãng oan (%)**: trong mọi dòng lỗi hãng trợ lý đã ghi vào sổ, bao nhiêu phần trăm ghi cho một cặp (hãng, kiện) không có trong nhãn đúng của ticket. Đọc kèm **tỉ lệ bỏ sót (%)**: phần trăm cặp (hãng, kiện) có trong nhãn mà trợ lý không ghi. | **Tỉ lệ lệnh `file_carrier_fault` không có căn cứ tracking theo ca (%)**, đọc kèm tổng số lỗi tự động của từng hãng trong ca và cửa sổ 7 ngày (`lỗi/hãng`). |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | **Đầu ra của trợ lý:** `fault_rows` (`carrier_id`, `parcel_id`, `delay_days`) và `events` (`tracking`: `cause`, `cause_recorded`, `parcels[].delay`; `model_override`; `llm_fallback`) trong `runs/<mã lần chạy>/traces/<ticket>@<seed>.json`.<br>**Nhãn đúng:** `label.faults` trong `data/tickets.jsonl` (vòng 2: `incidents/Sx/tickets.jsonl`).<br>**Bao nhiêu:** bộ nền 22 ticket × 5 seed = 110 lần chạy; 11/22 ticket có nhãn phải ghi lỗi (mỗi ticket một cặp), tức 55 cặp cần ghi.<br>**Ai gán nhãn:** người ra đề gán sẵn, dựa trên nguồn sự thật: `orders[].parcels[].delay_cause`, ngày hẹn và ngày giao, `fault_causes` và `min_days_fee` của chính sách đang hiệu lực. Bàn kiểm chéo 10 dòng ngẫu nhiên bằng `helpers.carrier_at_fault()`; lệch thì ghi lại, không tự sửa nhãn. | 100% log `faults` và event `tracking` (`cause_recorded`, `parcels[].delay`, `parcels[].carrier_id`) trong production (đúng trường `lab10/monitors.py` đọc được, **không cần nhãn người**).<br>**Ngưỡng đối chiếu:** `data/world.json` → `carriers[].suspend_after_strikes_7d`, `ops_limits.max_auto_strikes_per_carrier_per_day = 2`.<br>**Tín hiệu đối chứng trễ:** khiếu nại bác lỗi từ hãng gửi về người nhận khiếu nại bên thứ ba (dùng kiểm lại ngưỡng, không dùng báo động). |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | **Tỉ lệ oan** = số dòng `fault_rows` có cặp [`carrier_id`, `parcel_id`] không nằm trong `label.faults` của ticket đó ÷ tổng số dòng `fault_rows` trợ lý đã ghi, cộng dồn mọi ticket × seed. Tử số chính là `wrongful_faults` mà `lab10.eval` đã tính cho từng lần chạy.<br>**Tỉ lệ bỏ sót** = số cặp trong `label.faults` không có trong `fault_rows` ÷ tổng số cặp trong nhãn, chỉ tính lần chạy có `status` khác `escalated`.<br>**Ca thiếu dữ liệu:** lệnh bị cổng chặn (event `gate` hoặc `legal_gate`) và lần chạy chuyển người duyệt không ghi dòng nào nên không vào mẫu số; đếm riêng. Mẫu số = 0 thì báo "không xác định", không báo 0%, và in kèm số dòng đã ghi để lộ kiểu "chặn hết".<br>**Chỉ ra chỗ hỏng:** mỗi dòng oan gắn một nguyên nhân theo trace: (1) `cause_recorded = false` (DB chưa ghi nguyên nhân, trợ lý mặc định là lỗi hãng); (2) kiện bị ghi khác kiện trễ nhất trong `tracking.parcels`; (3) có `model_override` (độ trễ lấy từ lời khách); (4) có `llm_fallback` với `purpose = policy_check` (fail-open); (5) khác. | `(Số dòng faults có trace cause_recorded = false HOẶC parcel_id khác kiện trễ nhất trong tracking.parcels) ÷ (Tổng số dòng faults trong ca) × 100%`.<br>**Ca thiếu/biên:** thiếu `parcel_id` tính vào tử số; ca không phát sinh `faults` (mẫu số = 0) ghi `0 lỗi / N/A` (không bỏ ca); ticket chuyển người hoặc bị gate chặn không tạo `faults` nên không vào mẫu số.<br>**Cửa sổ 7 ngày:** cộng dồn tổng dòng `faults` tự động của mỗi hãng để so với `suspend_after_strikes_7d`. |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | **Khung:** từng ca (**480 phút**) và cửa sổ cuộn **7 ngày**.<br>**VÀNG:** `> 0%` (≥ 1 lỗi không căn cứ/ca) → `NV-TUNG` kiểm trace trong 60 phút, gỡ lỗi nếu sai.<br>**ĐỎ:** ≥ 2 lỗi không căn cứ cho cùng 1 hãng trong ca (chạm `max_auto_strikes_per_carrier_per_day = 2`) **hoặc** tổng lỗi 7 ngày chạm `suspend_after_strikes_7d − 1` (`GHSH`/`DNB`: 2/3) → tắt `file_carrier_fault` và `notify_carrier` trong `config/switches.json`, báo PIC. |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | (1) Tin hoàn toàn vào nhãn và tracking DB: nếu chính `delay_cause` trong DB sai thì nhãn và trợ lý cùng sai, thước đo vẫn báo 0%.<br>(2) Không thấy giới hạn theo ngày: từng dòng đúng nhưng một hãng bị ghi quá `max_auto_strikes_per_carrier_per_day` = 2 lỗi/ngày (`ops_limits`) thì không phát hiện.<br>(3) Không thấy bước sau: thông báo gửi hãng (`notify_carrier`) có kèm dữ liệu cá nhân hay không; việc đó do `pii_leaks` đo.<br>(4) Mẫu số chỉ vài chục dòng, trên gói sự cố còn ít hơn: một dòng oan làm tỉ lệ nhảy vài điểm phần trăm, nên luôn đọc kèm số dòng tuyệt đối. | (1) Chính tracking DB bị nhập tay sai `delay_cause` → tín hiệu vẫn báo 0%.<br>(2) Hãng bị ghi lỗi đúng tracking nhưng sai chính sách mới (vd `FORCE_MAJEURE` sau `REFUND-v4`).<br>(3) Không bắt được tác hại lên bên ngoài khác: lộ PII trong `notify_carrier`, trừ nhầm shop (`payer = MERCHANT`) hay hoàn thiếu cho khách.<br>(4) Hãng nhỏ không gửi khiếu nại thì tín hiệu đối chứng trễ không xuất hiện. |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
