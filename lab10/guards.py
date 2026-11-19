@@ -34,7 +34,17 @@ from .tools import Verdict
 
 
 def pre_guard(ctx):
-    return Verdict.allow()
+    # VÒNG 2 · S3 · Phiếu C mục C6 nhánh [1], C7 dòng [1].
+    # Ghim phiên bản chính sách theo NGÀY HIỆU LỰC (effective_from ≤ as_of ≤ effective_to), không theo cờ index_active
+    # (bản sao do người bật tay). Agent sẽ tính tiền, hạn mức tự động và lỗi hãng bằng đúng phiên bản này.
+    policies = ctx.tools.lookup_policies()
+    policy = H.effective_policy(policies, ctx.as_of)
+    if policy is None:
+        return Verdict.escalate("không có chính sách nào hiệu lực ngày hôm nay: chuyển người xử lý")
+    flagged = next((p["policy_id"] for p in policies if p.get("index_active")), None)
+    if flagged != policy["policy_id"]:
+        ctx.log("policy_pinned", effective=policy["policy_id"], index_active=flagged, as_of=ctx.as_of)
+    return Verdict.allow(policy_id=policy["policy_id"])
 
 
 def write_gate(ctx, action):
@@ -97,6 +107,15 @@ def _gate_refund(ctx, action):
         return Verdict.escalate(
             f"số tiền hoàn {_vnd(asked)} vượt quyền lợi {_vnd(entitled)} theo tracking DB "
             f"(trễ {delay} ngày, {policy['policy_id']}): chuyển người duyệt")
+
+    # VÒNG 2 · S3 · Phiếu C mục C6 nhánh [1]: số tiền đúng quyền lợi vẫn phải qua người nếu vượt HẠN MỨC tự động
+    # của chính sách hiệu lực (REFUND-v4: 100.000đ). Lớp chặn thứ hai, phòng khi pre_guard không ghim được phiên bản.
+    if asked > policy["auto_limit_vnd"] and not action.get("approval_id"):
+        ctx.log("refund_over_auto_limit", order_id=order["order_id"], asked_vnd=asked,
+                auto_limit_vnd=policy["auto_limit_vnd"], policy_id=policy["policy_id"])
+        return Verdict.escalate(
+            f"số tiền hoàn {_vnd(asked)} vượt hạn mức tự động {_vnd(policy['auto_limit_vnd'])} "
+            f"({policy['policy_id']}) mà không có phê duyệt: chuyển người duyệt")
     return Verdict.allow()
 
 
@@ -118,6 +137,19 @@ def _gate_carrier_fault(ctx, action):
         return Verdict.deny(
             f"không đủ căn cứ ghi lỗi hãng: trễ {delay} ngày theo DB, nguyên nhân "
             f"{parcel.get('delay_cause') or 'chưa ghi'} ({policy['policy_id']})")
+
+    # VÒNG 2 · S3 · Phiếu C mục C6 nhánh [3], C7 dòng [3]. Trần đã thống nhất với Ops (ops_limits): từ lỗi thứ
+    # (max + 1) của cùng một hãng trong ngày thì KHÔNG ghi tự động; để kế toán đối soát NV-OANH xác nhận với hãng.
+    # Từng ca có thể đúng, nhưng cộng dồn sau bão sẽ đẩy hãng tới ngưỡng đình chỉ. Khách vẫn được hoàn theo chính sách.
+    cap = (ctx.tools.ops_limits() or {}).get("max_auto_strikes_per_carrier_per_day")
+    if cap is not None:
+        today = len(ctx.tools.fault_rows(carrier_id=parcel["carrier_id"]))
+        if today >= cap:
+            ctx.log("carrier_strike_cap", carrier_id=parcel["carrier_id"], strikes_today=today, cap=cap,
+                    order_id=order["order_id"], parcel_id=parcel["parcel_id"], reviewer="NV-OANH")
+            return Verdict.deny(
+                f"hãng {parcel['carrier_id']} đã có {today} lỗi tự động hôm nay (trần {cap}): "
+                f"không ghi tự động, chờ NV-OANH xác nhận")
 
     want = {"parcel_id": parcel["parcel_id"], "carrier_id": parcel["carrier_id"],
             "driver_id": parcel.get("driver_id"), "delay_days": delay}

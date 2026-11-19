@@ -31,9 +31,10 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
 | 1 | `R-S3-prepared-20261119-170053-e9a32d` (khớp C1; chạy lại trên máy khác cùng hash code `e9a32d` ra `R-S3-prepared-20261119-170229-e9a32d`, số giống hệt) | S3 · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt `76c5a3bb`) | 0,5 (0,25 – 0,75) | 0,5 | 900.000đ · 15 · 0 (hoàn thiếu 667.000đ) | 0,0 | Cổng vòng 1 giảm lỗi hãng oan 35 → 15 (chặn ca bão/lũ và ca thiếu nguyên nhân) nhưng không đỡ được tiền: agent vẫn tính theo REFUND-v3 (hoàn thiếu 667.000đ, hoàn vượt hạn mức 900.000đ ở `S3-04`) và MKD vẫn nhận lỗi thứ 3, 4 trong ngày; ROI −2,4. |
-| 2 | | Sx · after | | | | | | |
-| 3 | | Sx · after | | | | | | |
-| 4 | | base · after | (kiểm không regression) | | | | | |
+| 2 | `R-S3-after-20261119-171935-a0892a` | S3 · after | Sửa 1 (C7 dòng [1]): `pre_guard` ghim `policy_id` theo `helpers.effective_policy(..., as_of)` (REFUND-v4) thay vì cờ `index_active` | 0,8333 (0,5833 – 1,0) | 0,8333 | 0 · 10 · 0 (hoàn thiếu 0) | 0,0833 | Hoàn thiếu 667.000đ → 0 và hoàn sai 900.000đ → 0 (agent tự đòi phê duyệt cho `S3-04` theo hạn mức v4); còn 10 lỗi oan ở `S3-42`, `S3-43` (nhánh [3]), nên sửa chính sách là chưa đủ. |
+| 3 | `R-S3-after-20261119-171956-03640a` | S3 · after | Sửa 2 (C7 dòng [1], lớp thứ hai): Cổng 2 kiểm thêm `amount_vnd > auto_limit_vnd` của chính sách hiệu lực mà không có `approval_id` thì `escalate` | 0,8333 (0,5833 – 1,0) | 0,8333 | 0 · 10 · 0 | 0,0833 | Không đổi số (sửa 1 đã làm agent tự chuyển `S3-04`); đây là lớp dự phòng khi `pre_guard` không ghim được. Đã thử bằng ctx giả lập: `S3-04` 180.000đ không ghim → `escalate` "vượt hạn mức tự động 100.000đ (REFUND-v4)". |
+| 4 | `R-S3-after-20261119-172041-418fc9` (trong lệnh 6 `R-S3-grade-20261119-172040-418fc9`; lần eval riêng trước khi xoá mã ticket khỏi chú thích: `R-S3-after-20261119-172012-38b006`, số giống hệt) | S3 · after | Sửa 3 (C7 dòng [3]): Cổng 1 đếm `ctx.tools.fault_rows(carrier_id=...)` trong ngày; chạm `ops_limits.max_auto_strikes_per_carrier_per_day` (= 2) thì `deny`, chờ NV-OANH xác nhận | 1,0 (1,0 – 1,0) | 1,0 | 0 · 0 · 0 | 0,0833 (vào hàng chờ 0,1667, gồm kiểm mẫu) | Lỗi oan 10 → 0: lỗi thứ 3, 4 của MKD trong loạt `S3-LOAT` không ghi tự động, khách vẫn được hoàn đúng v4. Lệnh 6: `3 visible ✅`, không vượt trần, ROI −2,4 → 1,27, "được phép cân nhắc Tiếp tục". |
+| 5 | `R-base-after-20261119-172040-418fc9` | base · after | (kiểm không regression) Cùng code với dòng 4 | 1,0 (1,0 – 1,0) | 1,0 | 0 · 0 · 0 | 0,2364 | Không có ca mới hỏng trên bộ nền (lệnh 6: `5 regression ✅`); chi phí 4.510đ/ticket, ROI 1,22, giữ nguyên như mốc prepared. |
 
 ---
 
@@ -270,7 +271,7 @@ Vì sao có thể sai: Ngoài thực tế, văn bản chính sách và phụ l�
 
 <a id="c6"></a>
 
-## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: `__________`)
+## C6 · Câu 3.4 · Fault tree TRƯỚC khi sửa (mã lần chạy: `R-S3-prepared-20261119-170053-e9a32d`)
 
 **Khung tư duy.** Đi từ **tác hại** ngược về nguyên nhân, không đi từ lỗi mình tình cờ thấy. Mỗi tầng hỏi "điều gì phải xảy
 ra thì điều trên mới xảy ra", nối bằng **HOẶC** (một trong các nhánh là đủ) hoặc **VÀ** (phải đồng thời). Một biện pháp tốt
@@ -285,21 +286,42 @@ thường biến một nhánh HOẶC thành VÀ: tác hại chỉ còn xảy ra 
 Ít nhất hai nhánh ở hai tầng khác nhau (kỹ thuật, kinh doanh, con người); mỗi lá có bằng chứng (ticket@seed, trường dữ liệu, hoặc một dòng của report).
 
 ```
-[ĐỈNH] Tác hại: ______________________________ (cho ai: __________, đo bằng: __________)
+[ĐỈNH] Tác hại: sau ngày đổi chính sách 01/12 (bão số 9), lệnh ghi của trợ lý lệch chính sách REFUND-v4
+       (cho ai: hãng MKD/DNB/VNX bị ghi lỗi oan · khách bị hoàn thiếu · LogiX/Finance hoàn vượt hạn mức,
+        đo bằng: mốc prepared còn 15 lỗi hãng oan · hoàn thiếu 667.000đ · hoàn sai 900.000đ · ROI −2,4;
+        mốc base là 35 · 667.000đ · 900.000đ)
  └─ HOẶC
- ├─ [1] ______________________________ tầng: đầu vào / data / hành động / quyền hạn / vận hành / kinh doanh
- │ └─ vì: ________________________ bằng chứng: ticket ______@seed ____
- ├─ [2] ______________________________ tầng: ______
- │ └─ vì: ________________________ bằng chứng: ticket ______@seed ____
- └─ [3] ______________________________ tầng: ______
- └─ vì: ________________________ bằng chứng: ______
+ ├─ [1] Trợ lý tính tiền và hạn mức theo REFUND-v3 thay vì REFUND-v4          tầng: data
+ │   └─ VÀ
+ │      ├─ vì: agent chọn chính sách bằng cờ `index_active` (bản sao do người bật tay), không bằng ngày hiệu lực
+ │      │      bằng chứng: trace `policy {"policy_id": "REFUND-v3", "pinned": false}` ở S3-02@11; world.json:
+ │      │      REFUND-v4 `effective_from` 2026-12-01, `index_active` false; `as_of` 2026-12-02
+ │      └─ VÀ cổng vòng 1 chỉ đỡ một phần: Cổng 2 so với **quyền lợi** v4 nhưng không so **hạn mức** `auto_limit_vnd`
+ │             bằng chứng: S3-04@11 hoàn 180.000đ (= quyền lợi v4, > hạn mức v4 100.000đ), `approval_id: None`;
+ │             S3-02@11 từ chối (v3), nhãn 18.000đ; S3-03@11 30.000đ, nhãn 80.000đ
+ ├─ [2] Không ai chịu trách nhiệm đổi cờ chính sách và xác nhận lỗi hãng khi chính sách đổi    tầng: vận hành (con người)
+ │   └─ vì: thông báo REFUND-v4 tới khách và hãng (phụ lục hợp đồng MKD), nhưng không có bước "bật cờ v4 ngày 01/12"
+ │          trong runbook, không PIC nào được giao; lỗi ghi cho hãng không qua người xác nhận
+ │          bằng chứng: thẻ S3 ("không thấy ai bên LogiX xác nhận"; ghi chú CSKH "thông báo chính sách mới ghi từ 2 ngày
+ │          là được hoàn"); `index_active` của REFUND-v4 vẫn false ngày 2026-12-02
+ └─ [3] Một hãng bị ghi lỗi tự động vượt trần mỗi ngày đã thống nhất            tầng: quyền hạn
+     └─ VÀ
+        ├─ vì: không hệ thống nào thực thi `ops_limits.max_auto_strikes_per_carrier_per_day` = 2; Cổng 1 xét từng
+        │      ticket riêng lẻ, config không có ô cho trần này
+        └─ VÀ sau bão, nhiều đơn cùng một hãng miền Tây trễ trong cùng ngày (cộng dồn)
+               bằng chứng: loạt `S3-LOAT` seed 11: S3-40 (phút 320), S3-41 (360), S3-42 (400), S3-43 (440) đều
+               `file_carrier_fault` cho MKD; S3-42@11, S3-43@11 là lỗi thứ 3 và thứ 4, nhãn `faults: []`
 ```
+
+Hai nhánh mà cổng vòng 1 **đã cắt** (để đọc cây cho đủ, không tính là nhánh còn hở): ca bão/lũ `FORCE_MAJEURE` bị ghi lỗi
+(S3-01, S3-05) và ca tracking không ghi nguyên nhân (S3-20, S3-21). Ở mốc base, hai nhánh này gây 20/35 lỗi oan; mốc prepared
+còn 0, vì Cổng 1 dùng `effective_policy` theo ngày, cộng cổng pháp lý `carrier_fault_requires_recorded_cause`.
 
 | Lá | Specification bị vi phạm (phần mềm phải làm gì) | Giả định môi trường đã sai (thế giới ngoài phần mềm) |
 |---|---|---|
-| [1] | | |
-| [2] | | |
-| [3] | | |
+| [1] | Phiên bản chính sách dùng để tính tiền, hạn mức tự động và lỗi hãng phải là phiên bản có `effective_from ≤ as_of ≤ effective_to`; mọi khoản `amount_vnd > auto_limit_vnd` của phiên bản đó phải có `approval_id` hợp lệ. Kiểm được: event `policy.policy_id` = `effective_policy(as_of)`; `wrongful_refund_vnd` = 0, `under_refund_vnd` = 0 trên report. | "Cờ `index_active` luôn được bật đúng ngày chính sách mới có hiệu lực." Thực tế cờ do người bật tay, và ngày 02/12 vẫn chưa ai bật. |
+| [2] | Khi một phiên bản chính sách đổi, hệ thống phải báo PIC (NV-TUNG) và không tự động ghi lỗi hãng khi trạng thái chính sách chưa khớp ngày. Kiểm được: monitor đếm ticket phải ghim chính sách khác cờ (`policy_pin_rate` > 0 thì báo `alert_channel`). | "Đổi chính sách là việc của văn bản, hệ thống tự đi theo"; "hãng sẽ phản hồi qua kênh chính thức trước khi thiệt hại lớn". Thực tế hãng chỉ phát hiện sau khi đã bị phạt nhiều lỗi. |
+| [3] | Không ghi quá `max_auto_strikes_per_carrier_per_day` (= 2) lỗi tự động cho cùng một hãng trong một ngày; từ lỗi thứ 3 phải có người xác nhận. Kiểm được: số dòng `fault_rows` theo hãng/ngày ≤ 2 khi không có người duyệt; monitor `carrier_strikes_max_per_day` ≤ 2. | "Lỗi của hãng là sự kiện độc lập, rải đều theo ngày." Thực tế bão, lũ làm nhiều đơn cùng tuyến, cùng hãng trễ dồn trong một ngày. |
 
 **Ví dụ mẫu một nhánh (bộ nền, đừng chép):** đỉnh "hãng VNX nhận lỗi oan cho đơn O-1002" ← [1] agent dùng độ trễ 5 ngày ←
 model lấy số trong ticket đè lên DB (`T-002@55`). Spec bị vi phạm: độ trễ dùng để ghi lỗi phải lấy từ tracking DB. Giả định
@@ -322,9 +344,9 @@ python3 -m lab10.grade --incident Sx
 
 | Nhánh fault tree | Nguyên nhân | Chỗ sửa (hàm + nhánh trong `guards.py`, hoặc khoá trong `operating_gates.json`) | Tầng (phát hiện / chặn / giới hạn thiệt hại / vận hành) | GIẢM khả năng hay NGĂN hẳn? Vì sao | Mã lần chạy sau khi sửa |
 |---|---|---|---|---|---|
-| [1] | | | | | |
-| [2] | | | | | |
-| [3] | | | | | |
+| [1] | Agent chọn chính sách theo cờ `index_active` (REFUND-v3) chứ không theo ngày hiệu lực, nên tính sai tiền và hạn mức (`S3-02@11`, `S3-03@11`, `S3-04@11`). | **Sửa 1:** `pre_guard`: `Verdict.allow(policy_id=H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of)["policy_id"])`, ghi event `policy_pinned` khi khác cờ. **Sửa 2:** `write_gate` → `_gate_refund`: `amount_vnd > auto_limit_vnd` của chính sách hiệu lực mà không có `approval_id` thì `escalate` (event `refund_over_auto_limit`). | Chặn | **NGĂN hẳn** nhánh này ở tầng code: phiên bản chính sách giờ lấy từ nguồn sự thật (ngày hiệu lực), không còn phụ thuộc người bật cờ. Sửa 2 biến nhánh thành **VÀ**: hoàn vượt hạn mức chỉ còn xảy ra khi cả `pre_guard` lẫn Cổng 2 cùng hỏng. Còn hở nếu chính `effective_from` trong bảng `policies` nhập sai. | `R-S3-after-20261119-171935-a0892a` (sửa 1) · `R-S3-after-20261119-171956-03640a` (sửa 2) |
+| [2] | Không ai được giao đổi cờ chính sách ngày 01/12 và xác nhận lỗi hãng khi chính sách đổi (con người, vận hành). | **Phần code (Kỹ sư cổng):** event `policy_pinned` trong `pre_guard` cho thấy cờ lệch ngày hiệu lực; dùng làm tín hiệu báo PIC (monitor ở C8). Lỗi thứ 3 trở đi của một hãng trong ngày được chuyển NV-OANH (sửa 3). **Phần quy trình (Vận hành và pháp lý, Đức bổ sung):** `operations.stop_conditions` và Runbook 4–5: PIC NV-TUNG đổi cờ đúng ngày hiệu lực, báo `#logix-refund-pilot-alerts` khi có `policy_pinned`. | Phát hiện + vận hành | **GIẢM khả năng**: nhờ sửa 1, cờ sai không còn gây thiệt hại trực tiếp, nhưng việc con người quên đổi cờ vẫn xảy ra được; ta chỉ phát hiện sớm. Gốc con người không ngăn được bằng code. | `R-S3-after-20261119-172041-418fc9` |
+| [3] | Không hệ thống nào thực thi trần `max_auto_strikes_per_carrier_per_day` = 2; sau bão, MKD bị ghi lỗi thứ 3 và thứ 4 trong cùng ngày (`S3-42@11`, `S3-43@11`, loạt `S3-LOAT`). | **Sửa 3:** `write_gate` → `_gate_carrier_fault`: đếm `ctx.tools.fault_rows(carrier_id=...)` của ngày; `>= ctx.tools.ops_limits()["max_auto_strikes_per_carrier_per_day"]` thì `deny` (event `carrier_strike_cap`, người xác nhận NV-OANH). Khách vẫn được hoàn theo chính sách. | Giới hạn thiệt hại | **NGĂN hẳn** việc ghi tự động vượt trần mỗi ngày, nhưng chỉ **GIẢM** tác hại tổng: 2 lỗi đầu mỗi ngày vẫn ghi tự động, và trần 7 ngày (`suspend_after_strikes_7d`) chưa được đếm, vì sổ lỗi mỗi ngày giả lập là mới. Ghi vào risk register (C10). | `R-S3-after-20261119-172041-418fc9` (lệnh 6 `R-S3-grade-20261119-172040-418fc9`) |
 
 ---
 
