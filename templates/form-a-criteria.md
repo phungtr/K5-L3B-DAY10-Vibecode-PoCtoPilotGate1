@@ -20,12 +20,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.1 · Một mục tiêu cấp hệ thống (khác "model trả lời đúng")
 
-> Trợ lý đóng được yêu cầu hoàn phí ship do giao trễ **nhanh hơn và rẻ hơn làm tay (10.000đ/ticket)**, mà mọi thứ nó ghi ra ngoài
-> (dòng sổ cái, lỗi ghi cho hãng, thông báo gửi hãng, tin trả lời khách) **luôn khớp nguồn sự thật** (tracking DB, chính sách đang
-> hiệu lực, phê duyệt hợp lệ): không ai ngoài LogiX phải trả giá cho một quyết định tự động sai.
->
-> Dựa trên PRD v1.1 §3: "chạy đúng" được định nghĩa bằng các metric tiền và phê duyệt chấm bằng code (`approval_bypass` = 0,
-> `refund_amount_correct`, `reply_amount_matches_ledger` = 1,0), không phải bằng việc model trả lời đúng.
+>Trợ lý tự động giải quyết ổn định các yêu cầu hoàn tiền giao trễ trong đúng thẩm quyền dựa trên dữ liệu hệ thống và chính sác hiệu lực, ghi sổ cái và phản hồi khách nhất quán, không làm rò rỉ dữ liệu mật và không đẩy ngược phần lớn ca hợp lệ sang cho người duyệt.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
