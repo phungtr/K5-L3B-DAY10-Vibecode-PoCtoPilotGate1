@@ -1,24 +1,30 @@
 {
   "_huong_dan": "Cổng kinh doanh, vận hành, pháp lý mà trợ lý PHẢI tuân theo. Bàn điền ở vòng 1, chốt bằng python3 -m lab10.checkpoint, rồi được sửa tiếp ở vòng 2. null = chưa đặt cổng này. Giải thích từng dòng: docs/guide.md, mục Cổng trong config (#ban-do).",
   "business": {
-    "daily_refund_cap_vnd": null,
-    "cost_budget_per_ticket_vnd": null,
+    "daily_refund_cap_vnd": 1500000,
+    "cost_budget_per_ticket_vnd": 1500,
     "pilot_scope": {"mode": "all", "warehouses": [], "percent": 100},
-    "roi_min": null
+    "roi_min": 0.25
   },
   "operations": {
-    "pic": "",
-    "approver_id": "",
+    "pic": "NV-TUNG",
+    "approver_id": "NV-HANH",
     "reviewers_on_shift": 1,
-    "review_capacity_per_hour": null,
-    "max_queue_wait_minutes": null,
-    "stop_conditions": [],
-    "alert_channel": "",
-    "decision_note": false,
-    "review_sampling_pct": 0
+    "review_capacity_per_hour": 6,
+    "max_queue_wait_minutes": 60,
+    "stop_conditions": [
+      "Khi có 1 lỗi ghi oan cho hãng (wrongful_carrier_faults > 0) thì tắt file_carrier_fault và notify_carrier, chuyển mọi ca ghi lỗi hãng sang chị Oanh (NV-OANH) đối soát tay",
+      "Khi có 1 khoản hoàn sai (wrongful_refund_vnd > 0) thì tắt issue_refund, mọi ticket hoàn tiền chuyển người duyệt NV-HANH",
+      "Khi có 1 lần gửi dữ liệu cá nhân cho hãng (pii_leaks > 0) thì tắt notify_carrier",
+      "Khi tổng hoàn tự động trong ngày chạm 1.500.000đ thì dừng hoàn tự động tới hết ngày, phần còn lại chờ người duyệt",
+      "Khi có ca chờ người duyệt quá 60 phút, hoặc LLM lỗi 429 liên tiếp ở giờ cao điểm, thì PIC NV-TUNG gọi thêm người trực hoặc tắt issue_refund tới khi hàng chờ về 0"
+    ],
+    "alert_channel": "#logix-refund-pilot-alerts",
+    "decision_note": true,
+    "review_sampling_pct": 10
   },
   "legal": {
-    "pii_fields_blocked_to_third_party": [],
-    "carrier_fault_requires_recorded_cause": false
+    "pii_fields_blocked_to_third_party": ["recipient_contact", "customer_note"],
+    "carrier_fault_requires_recorded_cause": true
   }
 }
