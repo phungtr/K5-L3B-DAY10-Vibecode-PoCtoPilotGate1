@@ -44,6 +44,59 @@ Một điều học được, một điều còn chưa chắc.
 
 ---
 
+## PhungQuangTra-2A202604094
+
+### Phần việc phụ trách
+
+- **Vai:** Trưởng nhóm và Kỹ sư cổng (`Phùng Quang Trà` · `2A202604094`).
+- **Trưởng nhóm:** tạo repo của bàn (fork, đặt tên `K5-L3B-DAY10-Vibecode-PoCtoPilotGate1`), danh tính Git, bảng thành viên và chia vai
+  trong `TEAM.md`, chọn PRD v1.1 và eval card Lab 9 làm bản chung (`docs/lab9/`), ký tiêu chí trên máy mình cùng Trung.
+- **Kỹ sư cổng:** Phiếu A câu 1.3 (`A2` cột Offline) và `A5`; Phiếu B câu 2.1 (lần chạy base đầu tiên); câu 2.6 cùng Toàn (bản cổng
+  nháp vòng 1); Phiếu C câu 3.6 (`C8`, `lab10/monitors.py`) và `C0` dòng 6; chạy lệnh tự kiểm tra cuối trên thẻ `S3`.
+
+### Đóng góp cụ thể
+
+- **Khối 1:** thiết kế offline metric cho bước **ghi lỗi hãng** (`file_carrier_fault`): tỉ lệ ghi lỗi hãng oan kèm tỉ lệ bỏ sót, dữ
+  liệu lấy từ `fault_rows` và `label.faults` (110 lần chạy, 55 cặp cần ghi), cách tính mẫu số khi bị chặn hoặc chuyển người, và
+  4 điểm mù (câu 1.3). Soạn bản nháp đầu cho câu 1.5, 1.6 và `config/acceptance_criteria.json`; bàn thảo luận và Trung chốt lại
+  ngưỡng trước khi ký.
+- **Ký tiêu chí và giữ toàn vẹn hash:** ký trên máy mình (`signed_at` 16:09:59, commit `0b64495`). Phát hiện file tiêu chí được ký
+  ở dạng xuống dòng CRLF của Windows trong khi git lưu LF, nên máy chấm sẽ thấy hash lệch và coi là "sửa sau khi ký"; đồng thời
+  cả 19 file khoá lệch `MANIFEST.json`. Sửa bằng `.gitattributes` (commit `0929f1b`) mà không đổi một byte nội dung đã ký, rồi kiểm
+  lại trên một bản clone mới: file tiêu chí khớp lock, 0/19 file khoá lệch, `criteria verify` và kiểm lịch sử ký đều đạt.
+- **Khối 2:** chạy lần đánh giá đầu tiên (sau commit ký) và so tiêu chí: `pass_rate` 0,9909, hai chỉ số an toàn chưa đạt (hoàn
+  sai 20.000đ, 1 lỗi oan cho VNX), cùng đến từ `T-002@55` (khách khai trễ 5 ngày, tracking DB ghi 2 ngày). Viết và thử bản cổng
+  nháp vòng 1 (hoàn theo quyền lợi từ DB, ghi lỗi hãng theo tracking, gửi hãng chỉ trường được phép): `pass_rate` 1,0 trên bộ nền,
+  không ca đang đúng nào bị hỏng. Bản chốt vòng 1 cuối cùng do bàn viết lại (commit `b81a279`).
+- **Khối 3 (thẻ `S3`):** thêm 2 chỉ số theo dõi trong `lab10/monitors.py`: `policy_flag_drift_rate` (cờ `index_active` lệch ngày
+  hiệu lực: bộ nền 0, S3 1,0) và `max_carrier_strikes_per_day` (lỗi nhiều nhất một hãng nhận trong ngày: S3 4 khi chưa có cổng,
+  2 sau khi sửa, bộ nền 1); điền `C8` và `C0` dòng 6. Chạy lại lệnh tự kiểm tra trên code cuối: `PASS-VISIBLE`, mọi ngưỡng đã ký
+  đạt, không vượt trần.
+- **Ghi chú sử dụng AI:** dùng Claude Code (trợ lý AI) để đọc codebase và đề bài, soạn bản nháp câu 1.3, một số mục Phiếu A và
+  Phiếu B (`B3`–`B6`, `B7.2`), tìm và sửa lỗi lệch hash CRLF/LF, viết bản cổng nháp vòng 1 và 2 chỉ số theo dõi ở `C8`, và chạy
+  `lab10.eval` / `lab10.grade` trên máy mình. Tôi đọc lại, chạy kiểm tra và tự commit; các ngưỡng và quyết định do cả bàn chốt.
+
+### Bằng chứng
+
+- **Commit:** `cac3c9b` (CP1: `TEAM.md`, `docs/lab9/`), `81baba7` (câu 1.3, `A2` cột Offline), `8aebc75` (đồng bộ ngưỡng Phiếu A/B),
+  `0b64495` (ký tiêu chí), `0929f1b` (`.gitattributes`, sửa lệch hash), `21c2d55` (`A5`), `5afddcd` (`C8`, `monitors.py`, `C0` dòng 6).
+- **Mã lần chạy:** `R-base-before-20261119-161855-b45eeb` (câu 2.1, lần đánh giá đầu tiên, sau commit ký lúc 16:11:06),
+  `R-base-after-20261119-162659-ccd01e` (thử cổng nháp vòng 1), `R-S3-after-20261119-172443-ade563` và
+  `R-base-after-20261119-172444-ade563` (sau khi thêm chỉ số theo dõi), `R-S3-grade-20261119-173017-0cc34a` (tự kiểm tra trên code
+  cuối: `PASS-VISIBLE`, `6 monitor ✅`).
+- **Dòng trong phiếu:** `templates/form-a-criteria.md` (`A2` cột Offline, `A5`); `templates/form-c-incident.md` (`C0` dòng 6, `C8`);
+  `lab10/monitors.py` (`policy_flag_drift_rate`, `max_carrier_strikes_per_day`).
+
+### Exit ticket
+
+- **Một điều học được:** bằng chứng quan trọng ngang con số. Lab so hash theo từng byte, nên chỉ ký tự xuống dòng của Windows cũng
+  đủ làm tiêu chí đã ký trông như "bị sửa sau khi ký"; và thứ tự quy trình (chốt cổng vòng 1 trước khi nhận thẻ) cũng là bằng
+  chứng, bàn đã chốt muộn sau khi nhận thẻ và phải ghi lại minh bạch.
+- **Một điều còn chưa chắc:** cổng ghim chính sách theo ngày dựa hoàn toàn vào `effective_from` / `effective_to` nhập đúng; và với
+  LLM thật (không tất định như MockLLM), `pass_k` ≥ 0,95 trên 5 seed có còn đạt không, hay phải đo lại dải nhiễu A/A như ở Lab 9.
+
+---
+
 ## NguyenBaoTrung-2A202604013
 
 ### Phần việc phụ trách
