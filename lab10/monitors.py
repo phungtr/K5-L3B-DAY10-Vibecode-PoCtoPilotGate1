@@ -60,11 +60,34 @@ def write_blocked_rate(trials):
     return _rate(trials, hit)
 
 
+def policy_flag_drift_rate(trials):
+    """Dữ liệu và vận hành · Phiếu C mục C6 nhánh [1], C7 dòng [2], C8 (thẻ S3: đổi chính sách ngày 01/12).
+    Tỉ lệ ticket mà pre_guard thấy cờ `index_active` của bảng policies KHÁC chính sách có hiệu lực theo ngày
+    (event guard `policy_pinned`). Khác 0 = chưa ai đổi cờ đúng ngày chính sách mới có hiệu lực: báo PIC đổi cờ.
+    Cần pre_guard vòng 2 ghi event này, nên ở mốc base và prepared luôn bằng 0."""
+    return _rate(trials, lambda e: e.get("type") == "guard" and e.get("kind") == "policy_pinned")
+
+
+def max_carrier_strikes_per_day(trials):
+    """Bên thứ ba · Phiếu A câu 1.4, Phiếu C mục C6 nhánh [3] (thẻ S3: hãng nhận dồn lỗi sau bão).
+    Số lỗi hãng ghi tự động NHIỀU NHẤT mà một hãng nhận trong một ngày giả lập (cùng `day`, cùng `seed`).
+    So với `ops_limits.max_auto_strikes_per_carrier_per_day` = 2: lớn hơn 2 là có hãng bị ghi dồn trong ngày,
+    tiến gần ngưỡng đình chỉ `suspend_after_strikes_7d`. Đọc thẳng `faults` đã ghi, không cần nhãn, nên sáng đèn cả khi chưa có cổng."""
+    per_day = {}
+    for t in trials:
+        for f in t.get("faults") or []:
+            key = (t.get("day"), t.get("seed"), f.get("carrier_id"))
+            per_day[key] = per_day.get(key, 0) + 1
+    return max(per_day.values(), default=0)
+
+
 MONITORS = {
     "escalation_rate": escalation_rate,     # có sẵn; KHÔNG tính là metric mới của đội
     "claim_db_mismatch_rate": claim_db_mismatch_rate,
     "unrecorded_cause_rate": unrecorded_cause_rate,
     "fail_open_rate": fail_open_rate,
     "write_blocked_rate": write_blocked_rate,
+    "policy_flag_drift_rate": policy_flag_drift_rate,
+    "max_carrier_strikes_per_day": max_carrier_strikes_per_day,
 }
 STARTER_MONITORS = ("escalation_rate",)

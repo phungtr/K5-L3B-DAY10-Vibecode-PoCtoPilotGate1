@@ -35,6 +35,7 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 | 3 | `R-S3-after-20261119-171956-03640a` | S3 · after | Sửa 2 (C7 dòng [1], lớp thứ hai): Cổng 2 kiểm thêm `amount_vnd > auto_limit_vnd` của chính sách hiệu lực mà không có `approval_id` thì `escalate` | 0,8333 (0,5833 – 1,0) | 0,8333 | 0 · 10 · 0 | 0,0833 | Không đổi số (sửa 1 đã làm agent tự chuyển `S3-04`); đây là lớp dự phòng khi `pre_guard` không ghim được. Đã thử bằng ctx giả lập: `S3-04` 180.000đ không ghim → `escalate` "vượt hạn mức tự động 100.000đ (REFUND-v4)". |
 | 4 | `R-S3-after-20261119-172041-418fc9` (trong lệnh 6 `R-S3-grade-20261119-172040-418fc9`; lần eval riêng trước khi xoá mã ticket khỏi chú thích: `R-S3-after-20261119-172012-38b006`, số giống hệt) | S3 · after | Sửa 3 (C7 dòng [3]): Cổng 1 đếm `ctx.tools.fault_rows(carrier_id=...)` trong ngày; chạm `ops_limits.max_auto_strikes_per_carrier_per_day` (= 2) thì `deny`, chờ NV-OANH xác nhận | 1,0 (1,0 – 1,0) | 1,0 | 0 · 0 · 0 | 0,0833 (vào hàng chờ 0,1667, gồm kiểm mẫu) | Lỗi oan 10 → 0: lỗi thứ 3, 4 của MKD trong loạt `S3-LOAT` không ghi tự động, khách vẫn được hoàn đúng v4. Lệnh 6: `3 visible ✅`, không vượt trần, ROI −2,4 → 1,27, "được phép cân nhắc Tiếp tục". |
 | 5 | `R-base-after-20261119-172040-418fc9` | base · after | (kiểm không regression) Cùng code với dòng 4 | 1,0 (1,0 – 1,0) | 1,0 | 0 · 0 · 0 | 0,2364 | Không có ca mới hỏng trên bộ nền (lệnh 6: `5 regression ✅`); chi phí 4.510đ/ticket, ROI 1,22, giữ nguyên như mốc prepared. |
+| 6 | `R-S3-after-20261119-172443-ade563` · bộ nền `R-base-after-20261119-172444-ade563` · lệnh 6 `R-S3-grade-20261119-172454-ade563` | S3 · after (và base · after) | Câu 3.6 (C8): thêm 2 chỉ số theo dõi `policy_flag_drift_rate`, `max_carrier_strikes_per_day` trong `monitors.py`; **không đổi cổng** | 1,0 (1,0 – 1,0) | 1,0 | 0 · 0 · 0 | 0,0833 | Số giữ nguyên như dòng 4; lệnh 6 đủ `1 integrity`, `2 criteria`, `3 visible`, `5 regression`, `6 monitor` ✅, kết luận PASS-VISIBLE. Hai chỉ số mới sáng đèn trên S3 (`policy_flag_drift_rate` 0 → 1,0; `max_carrier_strikes_per_day` 1 → 4 khi chưa có cổng, 1 → 2 sau khi sửa). |
 
 ---
 
@@ -359,14 +360,21 @@ Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket t
 
 | | Chỉ số theo dõi mới của bàn |
 |---|---|
-| **Tên trong `MONITORS`** | |
-| **Bước / hành vi được đo** | |
-| **Thước đo** (một câu, có đơn vị) | |
-| **Dữ liệu** (trường nào của trial, không có nhãn) | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | |
-| **Khung thời gian / ngưỡng báo động** | |
-| **Điểm mù** (chỉ số này KHÔNG thấy gì) | |
-| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | |
+| **Tên trong `MONITORS`** | `policy_flag_drift_rate` (chính) · kèm `max_carrier_strikes_per_day` (phụ, xem dưới bảng) |
+| **Bước / hành vi được đo** | Bước **chọn chính sách** (C6 nhánh [1] và [2]): cờ `index_active` trong bảng `policies`, một bản sao do người bật tay, có còn khớp chính sách có hiệu lực theo ngày (`effective_from` ≤ `as_of` ≤ `effective_to`) hay không. |
+| **Thước đo** (một câu, có đơn vị) | Tỉ lệ ticket (%) mà cờ `index_active` chỉ sang một phiên bản chính sách khác phiên bản có hiệu lực theo ngày. |
+| **Dữ liệu** (trường nào của trial, không có nhãn) | `events` của từng trial: event `guard` có `kind = "policy_pinned"`, do `pre_guard` vòng 2 ghi khi cờ lệch, kèm `effective`, `index_active`, `as_of`. Không đọc nhãn, không đọc chữ khách gõ. |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | Số trial có ít nhất một event `policy_pinned` ÷ tổng số trial được đưa cho trợ lý (mẫu số gồm cả ca chuyển người). Ca `pre_guard` không tìm được chính sách hiệu lực thì đã `escalate` và không ghi event: không tính vào tử số, nhưng vẫn nằm trong mẫu số. |
+| **Khung thời gian / ngưỡng báo động** | Tính mỗi ca trực (480 phút). **VÀNG:** > 0 trong ca, tức cờ lệch nhưng `pre_guard` đã ghim đúng phiên bản → PIC NV-TUNG đổi cờ trong 60 phút, báo `#logix-refund-pilot-alerts`. **ĐỎ:** > 0 kéo dài sang ca thứ hai, hoặc xuất hiện vào ngày có chính sách mới hiệu lực → kiểm lại các khoản hoàn và lỗi hãng của ngày đó (Runbook 4). |
+| **Điểm mù** (chỉ số này KHÔNG thấy gì) | (1) Chỉ sáng khi `pre_guard` vòng 2 chạy: ở mốc base và prepared luôn bằng 0. (2) Không thấy trường hợp chính `effective_from` / `effective_to` nhập sai: cờ và ngày cùng sai thì vẫn báo 0. (3) Không thấy hậu quả cộng dồn cho hãng; phần đó do chỉ số phụ `max_carrier_strikes_per_day` đo. |
+| Giá trị trên bộ nền · trên thẻ (đọc mục `monitor` của report) | Mốc after: bộ nền **0** · S3 **1,0** (lệnh 6 `R-S3-grade-20261119-172454-ade563`, `6 monitor ✅`). |
+
+**Chỉ số phụ `max_carrier_strikes_per_day`** (C6 nhánh [3]; cùng ý với telemetry ở Phiếu A câu 1.4): số lỗi hãng ghi tự động
+**nhiều nhất** mà một hãng nhận trong một ngày giả lập. Dữ liệu là `faults` của các trial cùng `day` và cùng `seed`, không cần nhãn.
+Cách tính: đếm số dòng `faults` theo (ngày, seed, hãng), lấy giá trị lớn nhất. Ngưỡng: **> 2** (`ops_limits.max_auto_strikes_per_carrier_per_day`)
+là ĐỎ, tắt `file_carrier_fault` và báo NV-OANH xác nhận với hãng. Chỉ số này sáng cả khi chưa có cổng: mốc base, bộ nền **1** · S3
+**4** (MKD nhận 4 lỗi trong loạt `S3-LOAT`); mốc after, bộ nền **1** · S3 **2** (cổng sửa 3 giữ đúng trần). Điểm mù: không cộng dồn
+7 ngày (`suspend_after_strikes_7d`), vì mỗi ngày giả lập là một sổ lỗi mới.
 
 ---
 
