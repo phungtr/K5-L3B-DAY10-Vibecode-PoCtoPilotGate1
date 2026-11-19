@@ -437,7 +437,7 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 | 6 · Chi phí | Xong | `config/operating_gates.json` mục `business` (`daily_refund_cap_vnd = 1.500.000`, loại `HCM-B2B`); report `S3 after`: `4.405đ/ticket ≤ 8.000đ`, `ROI = 1,27 ≥ 0,25`, `0` kho đắt hơn làm tay | Nguyễn Bảo Trung |
 | 7 · Vận hành | Xong | `config/operating_gates.json` mục `operations` (`NV-TUNG`, `NV-HANH`, `decision_note = true`, `review_sampling_pct = 10`, 5 `stop_conditions`), `lab10/monitors.py` (4 metric mới), Runbook 1–5 (`B7.5–B7.6`, `C11`) | Lại Trọng Đức |
 | 8 · Con người, pháp lý | Xong | `config/operating_gates.json` mục `legal`, `C3.5`, `C10`, Runbook 4; `S3 after`: `wrongful_carrier_faults = 0` (từ 35 → 15 → 0), `pii_leaks = 0`, từ lỗi hãng thứ 3/ngày chuyển `NV-OANH` xác nhận | Lại Trọng Đức |
-| 9 · Quyết định | Xong *(chờ chốt cột v2 ở C12)* | Commit ký tiêu chí `0b64495`, chốt vòng 1 `76c5a3bb`, quyết định `v1 = Tiếp tục` (`B8`), report `S3 after` ghi "Được phép cân nhắc Tiếp tục" (`C12`) | Phùng Quang Trà |
+| 9 · Quyết định | Xong | Commit ký tiêu chí `0b64495`, chốt vòng 1 `76c5a3bb`, quyết định `v1 = Tiếp tục` (`B8`), quyết định `v2 = Tiếp tục` (`C12`, `R-S3-grade-20261119-172929-0cc34a`) khớp tiêu chí đã ký | Phùng Quang Trà |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
