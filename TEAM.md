@@ -55,12 +55,12 @@ Một điều học được, một điều còn chưa chắc.
 
 - **Khối 1 (Phiếu A & Tiêu chí):** Viết mục tiêu cấp hệ thống (Câu 1.1), giải thích khoảng tin cậy 95% (Câu 1.5), hoàn thiện câu tiêu chí kèm hành động, 4 câu soát, ranh giới đầu ra (Câu 1.6) và khóa ngưỡng trong `config/acceptance_criteria.json` (`pass_rate ≥ 0,99`, `pass_k ≥ 0,95`, 3 chỉ số an toàn `= 0`, `escalation_rate ≤ 0,35`, `cost_per_ticket ≤ 8.000đ`, `roi ≥ 0,25`, `queue_stuck = 0`) trước khi đánh giá.
 - **Khối 2 (Phiếu B & Gate v1):** Hoàn thiện bản đồ dữ liệu + ví dụ concept drift `REFUND-v4` ngày `2026-12-01` (`B3`); đặt cổng `business` (`daily_refund_cap_vnd = 1.500.000`, `cost_budget_per_ticket_vnd = 1.000`, `pilot_scope` 4 kho bán lẻ `HN, HCM, DN, CT` giữ `HCM-B2B` làm tay, `roi_min = 0,25`) khớp `ops_limits`/`ops_facts` (`B7.4`); đọc report vòng 1 và chốt `v1 = Tiếp tục` (`B8`).
-- **Khối 3 (Phiếu C · Thẻ `S3`):** Chạy tự kiểm tra mốc `prepared` trên `S3` (`FAIL`: `ROI -2,4`, hoàn sai `900.000đ`, `15` lỗi oan `MKD`/`VNX`); viết specification kiểm được cho `S3` ở `C5` Câu 3.2 (bắt buộc ghim `policy_id` theo `as_of` ở `pre_guard` và chuyển người khi vượt `auto_limit_vnd` thiếu duyệt); điền sẵn phần nền/nhận xét `prepared` của `C12` (*chờ bản sửa `after` để chốt `v2`*).
+- **Khối 3 (Phiếu C · Thẻ `S3`):** Chạy tự kiểm tra mốc `prepared` (`FAIL`: `ROI -2,4`, hoàn sai `900.000đ`, `15` lỗi oan); viết specification kiểm được cho `S3` ở `C5` Câu 3.2 (ghim `policy_id` theo `as_of` ở `pre_guard` và chuyển người khi vượt `auto_limit_vnd` thiếu duyệt); đọc report sau sửa `S3` (`PASS-VISIBLE`, `4.405đ/ticket`, `ROI 1,27`, `0` lỗi an toàn) và chốt hoàn chỉnh **`C12`** với quyết định **`v2 = Tiếp tục`** kèm ba dòng bắt buộc.
 
 ### Bằng chứng
 
-- **Commit:** `c90eb45` (Câu 1.1), `27b2937` & `fc2f6b3` (Câu 1.6 + `acceptance_criteria.json`), `0b64495` (ký tiêu chí trước khi đo), `5470448` (`B7.4` + `config/operating_gates.json` mục `business`), `c0089d2` (`B8` quyết định `v1`), `ffdc43b` (`C5` Câu 3.2).
-- **Mã lần chạy:** `R-base-before-20261119-163318-b45eeb`, `R-base-prepared-20261119-165623-e9a32d`, `R-base-prepared-20261119-165911-e9a32d` (`9/9 ĐẠT`, `ROI 1,22`, `4.510đ/ticket`); `R-S3-grade-20261119-170244-e9a32d` (`base`/`prepared` trên `S3`).
+- **Commit:** `c90eb45` (Câu 1.1), `27b2937` & `fc2f6b3` (Câu 1.6 + `acceptance_criteria.json`), `0b64495` (ký tiêu chí trước khi đo), `5470448` (`B7.4` + `config/operating_gates.json` mục `business`), `c0089d2` (`B8` quyết định `v1`), `ffdc43b` (`C5` Câu 3.2), `49ebec8` (`TEAM.md` cá nhân & phần nền `C12`).
+- **Mã lần chạy:** `R-base-before-20261119-163318-b45eeb`, `R-base-prepared-20261119-165623-e9a32d`, `R-base-prepared-20261119-165911-e9a32d` (`9/9 ĐẠT`, `ROI 1,22`, `4.510đ/ticket`); `R-S3-grade-20261119-170244-e9a32d` (`prepared` trên `S3`); `R-S3-grade-20261119-172929-0cc34a` (`after` trên `S3`: `PASS-VISIBLE`, `ROI 1,27`, `4.405đ/ticket`, `6 monitor ✅`).
 - **Dòng trong phiếu:** `templates/form-a-criteria.md` (`A1`, `A3`, `A4`); `templates/form-b-evaluation-gates.md` (`B3`, `B7.4`, `B8`); `templates/form-c-incident.md` (`C5` Câu 3.2, `C12`).
 
 ### Exit ticket

@@ -471,28 +471,28 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 |---|---|
 | Commit ký tiêu chí | `0b64495` (giống v1) |
 | Hash chốt cổng vòng 1 | `76c5a3bb` (giống v1) |
-| Mã lần chạy dùng làm bằng chứng | thẻ `S3`, mốc base: `R-S3-before-20261119-170053-e9a32d` · prepared: `R-S3-prepared-20261119-170053-e9a32d` · after: `[Chờ lần grade cuối sau sửa S3]` |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | `[Chờ bản chạy after sau sửa S3]` |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | `[Chờ bản chạy after sau sửa S3]` |
-| Quyết định (khoanh một) | `[Chờ bản chạy after sau sửa S3]` *(chọn 1: Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng)* |
-| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `[Chờ bản chạy after sau sửa S3]` |
-| Bằng chứng 2 | `[Chờ bản chạy after sau sửa S3]` |
-| Bằng chứng 3 | `[Chờ bản chạy after sau sửa S3]` |
-| Khớp dòng nào trong `decision_rule` đã ký? | `[Chờ bản chạy after sau sửa S3]` |
-| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | `[Điền theo quyết định v2]` |
-| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | `[Điền theo quyết định v2]` |
-| Nếu Dừng: bài học ghi lại | `[Điền theo quyết định v2]` |
-| Ngày quyết định lại (trừ khi Dừng) | `2026-11-26` *(nếu không chọn Dừng, khớp A4 & B8)* |
+| Mã lần chạy dùng làm bằng chứng | thẻ `S3`, mốc base: `R-S3-before-20261119-172929-0cc34a` · prepared: `R-S3-prepared-20261119-172929-0cc34a` · after: `R-S3-after-20261119-172929-0cc34a` |
+| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | Không (`0` ca ùn, chờ tối đa `0,0` phút; chi phí `4.405đ/ticket ≤ 8.000đ`; `ROI 1,27 ≥ 0,25`; hoàn tự động ngày `109.400đ ≤ trần 1.500.000đ` và ngân sách `2.000.000đ`; LLM đắt nhất `771đ ≤ 1.500đ`; `0` lỗi pháp lý). |
+| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | Trên `S3`: kho **HN** có chi phí cao nhất (`4.190đ/ticket` do chứa ca vượt hạn mức `100.000đ` chuyển người), nhưng vẫn đạt `pass 1,0`, `0` hoàn sai, `0` lỗi oan và dưới trần `8.000đ`; mọi kho pilot (`CT`, `DN`, `HCM`, `HN`) và mọi hãng (`DNB`, `GHSH`, `MKD`, `VNX`) đều đạt `1,0`. Trên bộ nền: kho `?` tốn `10.359đ` (`1` đơn `T-018` thiếu mã `O-9999`), 4 kho thật cao nhất là `DN` (`4.646đ`). Không đổi quyết định. |
+| Quyết định (khoanh một) | **Tiếp tục** · Thu hẹp · Cải tiến thêm · Dừng *(chạy thử có kiểm soát tại 4 kho bán lẻ `HN, HCM, DN, CT`)* |
+| Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-S3-after-20261119-172929-0cc34a` (`R-S3-grade-20261119-172929-0cc34a`): đạt 5/5 chỉ số bắt buộc trên `S3` (`pass_rate 1,0 ≥ 0,99`; `pass_k 1,0 ≥ 0,95`; `wrongful_refund_vnd 0`; `wrongful_carrier_faults 0`; `pii_leaks 0`) và xóa sạch `667.000đ` hoàn thiếu. |
+| Bằng chứng 2 | `R-S3-after-20261119-172929-0cc34a`: đạt 3/3 ngưỡng `business_ops` (`4.405đ/ticket ≤ 8.000đ`; `ROI 1,27 ≥ 0,25`; `queue_stuck 0`), `escalation_rate 0,0833 ≤ 0,35` (tỉ lệ vào hàng chờ gồm kiểm mẫu `0,1667`) và không làm hỏng bộ nền (`5 regression ✅`, `1,0 / 1,0`). |
+| Bằng chứng 3 | `R-S3-grade-20261119-172929-0cc34a` (hash tiêu chí `6a7c8fe8ee19` không đổi, hash cổng vòng 1 `76c5a3bb` còn nguyên): đủ `1 integrity ✅`, `2 criteria ✅`, `3 visible ✅`, `5 regression ✅`, `6 monitor ✅` (đủ 6 chỉ số mới sáng đèn: `policy_flag_drift_rate` `0 → 1,0`, `max_carrier_strikes_per_day` `4 → 2` trên `S3`), kết luận `"Được phép cân nhắc 'Tiếp tục'"`. |
+| Khớp dòng nào trong `decision_rule` đã ký? | Khớp nhánh `"Tiếp tục"`: đạt đủ 5 chỉ số bắt buộc, 3 ngưỡng `business_ops` trên cả bộ nền lẫn gói sự cố `S3`, và không vượt trần vận hành nào. |
+| Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | Không áp dụng ở `v2` *(kho sỉ `HCM-B2B` giữ ngoài phạm vi sang làm tay theo cấu hình `business.pilot_scope` từ vòng 1)*. |
+| Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | Không áp dụng ở `v2`. |
+| Nếu Dừng: bài học ghi lại | Không áp dụng ở `v2`. |
+| Ngày quyết định lại (trừ khi Dừng) | `2026-11-26` *(khớp A4 & B8)* |
 | PIC ký | `Nguyễn Bảo Trung (Sản phẩm và kinh doanh)` |
 
 **Chỉ ở v2**
-- Quyết định đổi hay giữ so với v1? Vì con số nào: `[Chờ bản chạy after sau sửa S3]`
-- Report tự kiểm tra: mã lần chạy `[Chờ bản chạy after sau sửa S3]` · ô nào còn đỏ (nguyên nhân × tầng): `[Chờ bản chạy after sau sửa S3]`
+- Quyết định đổi hay giữ so với v1? Vì con số nào: **Giữ nguyên `Tiếp tục` như `v1`** (vì sau khi sửa vòng 2, gói `S3` từ mức `FAIL` ở `prepared` — `pass_rate 0,5`, hoàn sai `900.000đ`, `15` lỗi oan, `ROI -2,4` — đã đạt toàn bộ chỉ số bắt buộc và kinh doanh: `pass_rate 1,0`, `wrongful_refund_vnd 0`, `wrongful_carrier_faults 0`, `4.405đ/ticket`, `ROI 1,27`, không hỏng bộ nền).
+- Report tự kiểm tra: mã lần chạy `R-S3-grade-20261119-172929-0cc34a` · ô nào còn đỏ (nguyên nhân × tầng): Không (5/5 mục đo được trên máy bàn đều `✅`; mục `4 hidden` chưa chạy trên máy bàn).
 - Cổng vòng 1 (mốc prepared) đã đỡ được gì trước khi bàn biết sự cố, và bỏ sót gì: **Đỡ được:** chặn **20/35** lỗi oan cho hãng (giảm `35 → 15`, `pass_rate` `0,25 → 0,50`, `pass_k` `0,25 → 0,50`; sạch hoàn toàn `S3-01`, `S3-05` trễ do bão `FORCE_MAJEURE`, `S3-20..21` trống `delay_cause`, `DNB` `5 → 0`, kho `HCM` đạt `1,0`, giữ `pii_leaks = 0`, `queue_stuck = 0`). **Bỏ sót:** chưa ghim `policy_id` theo `as_of` ở `pre_guard` và chưa kiểm `auto_limit_vnd` của `REFUND-v4` (`100.000đ`), nên hoàn thiếu `667.000đ` (`S3-02..03`), hoàn sai `900.000đ` / 5 seed (`S3-04`) kéo `ROI` xuống `-2,4`, và chưa chặn trần `2 lỗi/hãng/ngày` nên còn `15` lỗi oan (`MKD` loạt `S3-42..43` và `S3-04`).
-- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: `[Chờ bản chạy after sau sửa S3]`
+- Report ghi "được phép cân nhắc Tiếp tục" hay "không đủ căn cứ"? Quyết định của bàn có khớp không: Report ghi **"Được phép cân nhắc 'Tiếp tục'."** — **khớp** hoàn toàn với quyết định **`Tiếp tục`** và tiêu chí đã ký của bàn.
 - Một thứ bộ thử hôm nay chưa đo, và nó ảnh hưởng quyết định ra sao: Bộ thử mock chưa đo được độ trễ/sai sót nhập `delay_cause` và cập nhật chính sách ngoài thực tế, tải hàng chờ khi bão kéo dài nhiều ngày, cũng như **bài test ẩn (`hidden`)** (đơn, khách, cách viết, ngày khác); vì vậy dù đạt test thấy được vẫn phải giữ kiểm mẫu 10% và điều kiện dừng cứng khi ra pilot.
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)
 1. Một giả định về môi trường mà thiết kế của đội đang dựa vào, có thể sai ngoài thực tế: Thiết kế giả định trường `delay_cause` và ngày giao trong tracking DB do điểm phát/hãng nhập đúng sự thật và phụ lục chính sách mới được cập nhật lên hệ thống đúng trước ngày hiệu lực `as_of`, trong khi thực tế bão lũ hoặc quá tải dễ gây bỏ trống, nhập sai hoặc trễ đồng bộ.
-2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: `[Chờ hoàn tất sửa guards.py / operating_gates.json vòng 2 để kết luận chính xác nhánh nào ngăn hẳn và nhánh nào chỉ giảm]`
+2. Gate của đội chỉ GIẢM khả năng hay thực sự NGĂN được tác hại? Vì sao: Hệ thống NGĂN hẳn việc áp nhầm chính sách cũ (`pre_guard` ghim theo ngày hiệu lực), hoàn vượt `auto_limit_vnd` thiếu duyệt (`_gate_refund`) và ghi quá `2 lỗi/hãng/ngày` (`_gate_carrier_fault`), nhưng chỉ GIẢM tác hại tổng thể vì tối đa 2 lỗi đầu mỗi ngày vẫn tự động ghi (chưa cộng dồn 7 ngày so với `suspend_after_strikes_7d`) và cổng vẫn dựa vào độ đúng của `delay_cause` trong tracking DB.
 3. Vì data là mock, cần đo lại gì trong pilot thật trước Bước đánh giá 2: Đo lại độ chính xác và tỉ lệ thiếu `delay_cause` qua đối soát tuần với hãng/shop, tỉ lệ chuyển người cùng thời gian chờ thực tế giờ cao điểm sau bão, và chi phí mỗi ticket kèm ROI thực tế theo từng kho so với ngưỡng `8.000đ` / `0,25`.
